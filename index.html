@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: TACTICAL OPS</title>
+    <title>URBAN WARFARE: SPEC OPS</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Press+Start+2P&family=Rajdhani:wght@600&display=swap');
         
@@ -33,7 +33,6 @@
         #left-grip { border-right: 2px solid #333; }
         #right-grip { border-left: 2px solid #333; }
 
-        /* --- CONTROL PLACEMENT --- */
         #left-control-wrapper {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
         }
@@ -57,7 +56,7 @@
 
         canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
 
-        /* CONTROLS STYLING */
+        /* CONTROLS */
         .d-pad { position: relative; width: 140px; height: 140px; }
         .d-btn {
             position: absolute; background: #2a2a2a; border: 2px solid #111; 
@@ -81,7 +80,6 @@
         .pro-btn:active { box-shadow: inset 5px 5px 10px #0b0b0b, inset -5px -5px 10px #222; color: #fff; }
         #vb-shoot { top: 10px; right: 5px; border-bottom: 4px solid #c0392b; color: #c0392b; }
         #vb-jump { bottom: 10px; left: 5px; border-bottom: 4px solid #2980b9; color: #2980b9; }
-        
         .shoulder-btn {
             position: absolute; top: 30px; right: 30px; width: 90px; height: 35px;
             background: #333; border: 1px solid #555; border-radius: 4px;
@@ -90,6 +88,7 @@
         }
         .shoulder-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #111; background: #2ecc71; color: #000; }
 
+        /* FX */
         #scanlines {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%);
@@ -109,7 +108,6 @@
         #hp-bar { display: flex; gap: 4px; margin-bottom: 4px; }
         .heart { width: 10px; height: 10px; background: #e74c3c; display: inline-block; border: 1px solid #fff; box-shadow: 1px 1px 0 #000;}
 
-        /* --- UI OVERLAYS --- */
         #ui-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999; background: #080808; display: flex; flex-direction: column;
@@ -529,156 +527,149 @@
             lights.forEach(l=>{l.life--;}); lights=lights.filter(l=>l.life>0);
         }
 
-        function draw() {
-            if(!isGameRunning && document.getElementById('game-over-screen').style.display !== 'flex') return;
-            const bIndex = getBiomeIndex(level); const t = BIOMES[bIndex];
-            let grd = ctx.createLinearGradient(0,0,0,GH); grd.addColorStop(0, t.skyTop); grd.addColorStop(1, t.skyBot); ctx.fillStyle = grd; ctx.fillRect(0,0,GW,GH);
-            ctx.save(); if(shake>0) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake); ctx.translate(-Math.floor(cameraX), 0);
-
-            bgElements.forEach(el => {
-                let dx = (el.x - cameraX * (el.layer+1)*0.15) % (GW*2); if(dx<-200) dx+=GW*2;
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                if(bIndex===0) { ctx.beginPath(); ctx.moveTo(dx, GH); ctx.lineTo(dx+el.size, GH-el.size*2); ctx.lineTo(dx+el.size*2, GH); ctx.fill(); }
-                else if(bIndex===1) { ctx.fillRect(dx, GH-el.size*3, el.size, el.size*3); }
-                else { ctx.fillRect(dx, 0, el.size/2, GH); }
-            });
-            bgParticles.forEach(p=>{
-                ctx.fillStyle=p.color;
-                if(p.type === 'wind') ctx.fillRect(p.x - cameraX, p.y, 100, 1);
-                else { ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI*2); ctx.fill(); }
-            });
-
-            platforms.forEach(p => { ctx.fillStyle=t.plat; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle=t.detail; ctx.fillRect(p.x, p.y, p.w, 10); });
-            hazards.forEach(h => { if(h.active) { ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(h.x, h.y, 6, Math.PI, 0); ctx.fill(); ctx.fillStyle=(frameCount%20<10)?'#f00':'#500'; ctx.fillRect(h.x-2, h.y-8, 4, 4); } });
-            bloodPools.forEach(pool => { ctx.fillStyle='#800000'; ctx.beginPath(); ctx.ellipse(pool.x, pool.y, pool.size, pool.size/4, 0, 0, Math.PI*2); ctx.fill(); });
-            
-            debris.forEach(d => { 
-                ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.angle); 
-                if(d.type==='shell') { ctx.fillStyle='#f1c40f'; ctx.fillRect(-2,-1,4,2); } 
-                else { ctx.fillStyle=(d.part==='head'?'#222':'#333'); ctx.fillRect(-d.w/2, -d.h/2, d.w, d.h); ctx.fillStyle='#b00'; ctx.fillRect(-d.w/2, -d.h/2, 4, 4); }
-                ctx.restore(); 
-            });
-
-            if(goal) drawSprite(goal.x, goal.y+50, 'chopper', true, 'idle', frameCount);
-            powerups.forEach(p => { if(p.active){ let dy=Math.sin(frameCount*0.1)*5; ctx.fillStyle=p.type==='L'?'#8e44ad':(p.type==='G'?'#2ecc71':'#e74c3c'); ctx.fillRect(p.x, p.y+dy, 24, 24); ctx.fillStyle='#fff'; ctx.fillText(p.type, p.x+8, p.y+dy+17); }});
-            if(player) {
-                enemies.forEach(e => { if(e.active) {
-                    if(e.hitFlash > 0) ctx.filter = 'brightness(200%)';
-                    drawSprite(e.x+15, e.y, 'enemy', e.vx>0, 'run', frameCount+e.x); 
-                    ctx.filter = 'none';
-                }});
-                if(player.invul%4<2) drawSprite(player.x+player.w/2, player.y+player.h, 'player', player.faceR, player.state, frameCount);
-            }
-            if(boss && boss.active) drawSprite(boss.x, boss.y+40, 'boss', false, 'idle', frameCount);
-            bullets.forEach(b => { if(b.type==='rocket') { ctx.fillStyle='#fff'; ctx.fillRect(b.x-5, b.y-3, 12, 6); } else if(b.type==='grenade') { ctx.fillStyle='#2ecc71'; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); } else { ctx.fillStyle=b.player?'#ff0':'#ff5500'; ctx.fillRect(b.x-5, b.y-2, 10, 4); } });
-            particles.forEach(p => { 
-                ctx.fillStyle=p.color; 
-                ctx.fillRect(p.x, p.y, p.size||4, p.size||4); 
-            });
-            
-            ctx.globalCompositeOperation = 'lighter';
-            lights.forEach(l => {
-                let grad = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.size);
-                grad.addColorStop(0, l.color);
-                grad.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.arc(l.x, l.y, l.size, 0, Math.PI*2); ctx.fill();
-            });
-            ctx.globalCompositeOperation = 'source-over';
-
-            ctx.restore();
-        }
-
-        // MODERN SPRITES
+        // --- ADVANCED SKELETAL SPRITE ANIMATION ---
         function drawSprite(x,y,t,r,s,f) {
-            ctx.save(); ctx.translate(Math.floor(x),Math.floor(y)); if(!r)ctx.scale(-1,1);
-            
-            if(t==='player'){ 
-                // MODERN SWAT LOOK
-                let lo = (s==='run')?Math.sin(f*0.4)*3:0; 
-                let go = (s==='run')?Math.cos(f*0.4)*2:0;
-                ctx.translate(0, -50 + lo); // Adjust Y for taller sprite
+            ctx.save(); 
+            ctx.translate(Math.floor(x), Math.floor(y)); 
+            if(!r) ctx.scale(-1,1);
 
-                // Legs
-                ctx.fillStyle='#111'; // Dark pants
-                ctx.fillRect(-8, 35, 8, 15); // Back leg
-                ctx.fillStyle='#222'; 
-                ctx.fillRect(2, 35, 8, 15); // Front leg
+            if(t==='player'){
+                // ANIMATION VARIABLES
+                // Run cycle: sin wave based on frame count
+                let runCycle = (s==='run') ? Math.sin(f * 0.4) : 0;
+                let idleCycle = (s==='idle') ? Math.sin(f * 0.1) : 0;
                 
-                // Boots
-                ctx.fillStyle='#000';
-                ctx.fillRect(-10, 48, 10, 4);
-                ctx.fillRect(0, 48, 10, 4);
+                // --- LEGS ---
+                // Left Leg (Back)
+                ctx.save();
+                ctx.translate(0, -25); // Hip pivot
+                ctx.rotate((s==='run') ? -runCycle * 0.8 : 0);
+                if(s==='jump') ctx.rotate(-0.5);
+                ctx.fillStyle = '#111'; // Dark pants
+                ctx.fillRect(-4, 0, 8, 12); // Thigh
+                // Lower leg bend
+                ctx.translate(0, 12);
+                ctx.rotate((s==='run' && runCycle > 0) ? runCycle : 0); // Knee bend
+                ctx.fillRect(-3, 0, 6, 12); // Shin
+                ctx.fillStyle = '#000'; ctx.fillRect(-4, 12, 10, 4); // Boot
+                ctx.restore();
 
-                // Torso (Vest)
-                ctx.fillStyle='#1a1a1a'; // Dark armor
-                ctx.fillRect(-10, 15, 20, 20); 
-                // Vest Detail (Pouches)
-                ctx.fillStyle='#333'; 
-                ctx.fillRect(-8, 25, 6, 8);
-                ctx.fillRect(2, 25, 6, 8);
+                // Right Leg (Front)
+                ctx.save();
+                ctx.translate(0, -25); // Hip pivot
+                ctx.rotate((s==='run') ? runCycle * 0.8 : 0);
+                if(s==='jump') ctx.rotate(0.5);
+                ctx.fillStyle = '#1a1a1a'; // Slightly lighter for front leg depth
+                ctx.fillRect(-4, 0, 8, 12); // Thigh
+                // Lower leg
+                ctx.translate(0, 12);
+                ctx.rotate((s==='run' && runCycle < 0) ? -runCycle : 0); // Knee bend
+                ctx.fillRect(-3, 0, 6, 12); // Shin
+                ctx.fillStyle = '#000'; ctx.fillRect(-4, 12, 10, 4); // Boot
+                ctx.restore();
 
-                // Arms
-                ctx.fillStyle='#222';
-                ctx.fillRect(5, 18, 12, 6); // Front arm holding gun
+                // --- TORSO ---
+                ctx.translate(0, -25 + idleCycle); // Bobbing body
+                ctx.fillStyle = '#222'; // Vest color
+                ctx.fillRect(-8, -20, 16, 22); // Main body
+                // Detail: Vest pouches
+                ctx.fillStyle = '#333';
+                ctx.fillRect(-6, -10, 5, 6);
+                ctx.fillRect(1, -10, 5, 6);
+                // Detail: Backpack
+                ctx.fillStyle = '#111';
+                ctx.fillRect(-12, -18, 4, 14);
 
-                // Head (Helmet)
-                ctx.fillStyle='#2c3e50'; // Helmet Color
-                ctx.beginPath(); ctx.arc(0, 10, 10, Math.PI, 0); ctx.lineTo(10,18); ctx.lineTo(-10,18); ctx.fill();
+                // --- HEAD ---
+                ctx.save();
+                ctx.translate(0, -22);
+                ctx.rotate(0.1); // Slight forward tilt
+                // Helmet
+                ctx.fillStyle = '#1a1a1a'; 
+                ctx.beginPath(); 
+                ctx.arc(0, 0, 10, Math.PI, 0); // Top of helmet
+                ctx.lineTo(10, 8); 
+                ctx.lineTo(-8, 8); 
+                ctx.fill();
+                // NVG/Visor Glow
+                ctx.fillStyle = '#00ff00';
+                ctx.shadowColor = '#00ff00'; ctx.shadowBlur = 10;
+                ctx.fillRect(4, -2, 6, 4); // Visor
+                ctx.shadowBlur = 0;
+                ctx.restore();
+
+                // --- ARMS & GUN ---
+                ctx.save();
+                ctx.translate(2, -15); // Shoulder pivot
+                // Bob gun with walk
+                ctx.rotate((s==='run') ? Math.cos(f*0.4)*0.1 : 0); 
                 
-                // NVG Goggles (Glowing)
-                ctx.fillStyle='#00ff00';
-                ctx.shadowColor='#00ff00'; ctx.shadowBlur=10;
-                ctx.fillRect(4, 8, 6, 4);
-                ctx.shadowBlur=0;
-
-                // Gun (Carbine)
-                ctx.fillStyle='#000';
-                ctx.fillRect(10, 20+go, 25, 6); // Barrel
-                ctx.fillRect(15, 26+go, 4, 8); // Mag
-                ctx.fillRect(5, 22+go, 8, 4); // Stock
+                // Gun Stock
+                ctx.fillStyle = '#000';
+                ctx.fillRect(-8, 2, 10, 4);
+                // Gun Body
+                ctx.fillStyle = '#222';
+                ctx.fillRect(2, 0, 12, 6);
+                // Gun Barrel
+                ctx.fillStyle = '#000';
+                ctx.fillRect(14, 2, 10, 2);
+                // Magazine
+                ctx.fillStyle = '#111';
+                ctx.fillRect(6, 6, 4, 6);
+                
+                // Hands/Arms
+                ctx.fillStyle = '#1a1a1a'; // Sleeve
+                ctx.fillRect(-2, 0, 10, 4); // Forearm
+                ctx.fillStyle = '#333'; // Glove
+                ctx.fillRect(8, 2, 4, 4); // Front hand
+                
+                ctx.restore();
             } 
             else if (t==='enemy') { 
-                // MODERN MERCENARY
-                let lo = Math.sin(f*0.4)*3;
-                ctx.translate(0, -50 + Math.abs(Math.cos(f*0.4)));
+                // ENEMY ANIMATION (Similar structure, different style)
+                let runCycle = (s==='run') ? Math.sin(f * 0.4) : 0;
+                
+                // Legs
+                ctx.fillStyle = '#444'; // Grey Camo
+                // Back Leg
+                ctx.save(); ctx.translate(0, -25); ctx.rotate(-runCycle*0.8);
+                ctx.fillRect(-4, 0, 8, 24); ctx.restore();
+                // Front Leg
+                ctx.save(); ctx.translate(0, -25); ctx.rotate(runCycle*0.8);
+                ctx.fillRect(-4, 0, 8, 24); ctx.restore();
 
-                // Legs (Camo Grey)
-                ctx.fillStyle='#555'; 
-                ctx.fillRect(-8, 35, 8, 15);
-                ctx.fillStyle='#666'; 
-                ctx.fillRect(2, 35, 8, 15);
+                // Torso
+                ctx.translate(0, -25);
+                ctx.fillStyle = '#555'; // Shirt
+                ctx.fillRect(-8, -20, 16, 22);
+                ctx.fillStyle = '#333'; // Webbing/Vest
+                ctx.fillRect(-8, -18, 16, 10);
 
-                // Torso (Tac Rig)
-                ctx.fillStyle='#333'; // Vest
-                ctx.fillRect(-10, 15, 20, 20);
-                // Shirt sleeves
-                ctx.fillStyle='#555';
-                ctx.fillRect(5, 18, 10, 6);
+                // Head
+                ctx.save(); ctx.translate(0, -22);
+                ctx.fillStyle = '#dcb083'; // Skin
+                ctx.fillRect(-6, -6, 12, 12);
+                // Red Beret
+                ctx.fillStyle = '#c0392b';
+                ctx.beginPath(); ctx.moveTo(-8, -4); ctx.lineTo(8,-8); ctx.lineTo(8,0); ctx.lineTo(-8,0); ctx.fill();
+                // Sunglasses
+                ctx.fillStyle = '#000';
+                ctx.fillRect(2, -2, 6, 3);
+                ctx.restore();
 
-                // Head (Bandana/Beret)
-                ctx.fillStyle='#dcb083'; // Skin
-                ctx.fillRect(-7, 5, 14, 12);
-                ctx.fillStyle='#c0392b'; // Red Beret
-                ctx.beginPath(); ctx.moveTo(-8,6); ctx.lineTo(10,4); ctx.lineTo(12,10); ctx.lineTo(-8,10); ctx.fill();
-
-                // Eyes (Visor)
-                ctx.fillStyle='#111';
-                ctx.fillRect(2, 8, 8, 3);
-
-                // Gun (AK Style)
-                ctx.fillStyle='#222';
-                ctx.fillRect(10, 22, 22, 5); // Barrel
-                ctx.fillStyle='#3e2723'; // Wood stock
-                ctx.fillRect(5, 23, 6, 4); 
-                // Curved Mag
-                ctx.fillStyle='#000';
-                ctx.beginPath(); ctx.moveTo(18,27); ctx.quadraticCurveTo(15,35, 12, 32); ctx.lineTo(15,27); ctx.fill();
+                // Gun (AK Silhouette)
+                ctx.save(); ctx.translate(2, -12);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, 20, 4); // Barrel/Body
+                ctx.fillStyle = '#5d4037'; // Wood stock
+                ctx.fillRect(-8, 0, 8, 4);
+                ctx.fillStyle = '#000'; // Curved Mag
+                ctx.beginPath(); ctx.moveTo(8,4); ctx.quadraticCurveTo(4, 12, 0, 10); ctx.lineTo(4,4); ctx.fill();
+                ctx.restore();
             } 
             else if (t==='boss') {
                 ctx.translate(0,-50); ctx.fillStyle='#111'; ctx.fillRect(-40,0,20,50); ctx.fillRect(20,0,20,50); ctx.fillStyle='#333'; ctx.fillRect(-50,-50,100,60); ctx.fillStyle='#f00'; ctx.fillRect(-20,-30,40,20);
-            } 
-            else if (t==='chopper') {
+            } else if (t==='chopper') {
                 ctx.translate(0,-40); ctx.fillStyle='#000'; ctx.fillRect(-80,-25,160,4); ctx.fillStyle='#444'; ctx.beginPath(); ctx.ellipse(0,0,60,30,0,0,Math.PI*2); ctx.fill();
             }
             ctx.restore();
