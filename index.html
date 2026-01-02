@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: STABLE</title>
+    <title>URBAN WARFARE: ULTIMATE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@700&display=swap');
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none; -webkit-user-select: none; }
 
         body {
-            margin: 0; background-color: #000;
-            height: 100vh; width: 100vw;
+            margin: 0; background-color: #050505;
+            height: 100vh; height: 100dvh; width: 100vw;
             overflow: hidden; display: flex; flex-direction: column;
             font-family: 'Rajdhani', sans-serif;
         }
 
-        /* CONSOLE BODY */
+        /* CONSOLE */
         #console-body {
             display: flex; flex-direction: row; width: 100%; height: 100%;
             align-items: stretch; background: #111;
@@ -87,7 +87,19 @@
         }
         .shoulder-btn:active { transform: translateY(4px); box-shadow: none; background: #2ecc71; color: #000; }
 
-        /* HUD & UI */
+        /* FX */
+        #scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.15) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.8;
+        }
+        #vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%);
+            pointer-events: none; z-index: 11;
+        }
+
+        /* HUD */
         #ui-layer {
             position: absolute; top: 15px; left: 20px; width: calc(100% - 40px); pointer-events: none;
             display: none; justify-content: space-between; align-items: flex-start;
@@ -96,24 +108,42 @@
         #hp-bar { display: flex; gap: 4px; margin-bottom: 5px; }
         .heart { width: 16px; height: 16px; background: #c0392b; border: 2px solid #fff; transform: skewX(-15deg); }
 
+        /* BIOS SCREEN */
+        #bios-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #bios-logo {
+            width: 100px; height: 100px; background: linear-gradient(135deg, #f1c40f, #e67e22);
+            transform: rotate(45deg); box-shadow: 0 0 50px #e67e22;
+            opacity: 0; animation: logoFadeIn 4s forwards;
+        }
+        #bios-text {
+            margin-top: 60px; font-family: 'Rajdhani'; font-weight: 900; font-size: 40px; letter-spacing: 5px;
+            background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; color: transparent;
+            opacity: 0; animation: textFadeIn 4s forwards 0.5s;
+        }
+
+        /* OVERLAYS */
         #ui-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 99999; background: #080808; display: flex; flex-direction: column;
+            z-index: 100000; background: #080808; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
         }
         #boot-btn, .menu-btn {
-            background: transparent; border: 2px solid #fff; pointer-events: auto;
+            background: transparent; border: 2px solid #fff;
             color: #fff; padding: 20px 50px; font-family: 'Black Ops One'; font-size: 24px;
             cursor: pointer; animation: pulse 1.5s infinite; letter-spacing: 2px;
-            text-transform: uppercase; margin-top: 20px;
+            text-transform: uppercase; margin-top: 20px; pointer-events: auto;
         }
-        #boot-btn:active { background: #fff; color: #000; }
         #fs-toggle {
             position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
             background: #222; border: 1px solid #444; color: #666;
             padding: 5px 10px; font-size: 8px; z-index: 10000; cursor: pointer;
         }
 
+        /* GAME SCREENS */
         #splash-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;
             display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
@@ -147,6 +177,8 @@
         @keyframes blink { 50% { opacity: 0; } }
         @keyframes fadeInOutText { 0%, 100% { opacity: 0; } 20%, 80% { opacity: 1; } }
         @keyframes fadeOutSplash { 90% { opacity: 1; pointer-events: all; } 100% { opacity: 0; pointer-events: none; } }
+        @keyframes logoFadeIn { 0% { opacity: 0; transform: rotate(0deg) scale(0.5); } 20% { opacity: 1; transform: rotate(45deg) scale(1); } 80% { opacity: 1; transform: rotate(45deg) scale(1); } 100% { opacity: 0; transform: rotate(90deg) scale(1.2); } }
+        @keyframes textFadeIn { 0% { opacity: 0; letter-spacing: 20px; } 20% { opacity: 1; letter-spacing: 5px; } 80% { opacity: 1; } 100% { opacity: 0; } }
         @keyframes slideInLeft { from { transform: translateX(-200px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(200px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
@@ -154,8 +186,13 @@
 <body>
 
 <div id="ui-overlay">
-    <div style="margin-bottom: 20px; font-size: 14px; color: #666; font-family: monospace;">TACTICAL OS V.3.1</div>
+    <div style="margin-bottom: 20px; font-size: 14px; color: #666; font-family: monospace;">TACTICAL OS V.3.2</div>
     <button id="boot-btn" onclick="bootSystem()">POWER ON</button>
+</div>
+
+<div id="bios-screen">
+    <div id="bios-logo"></div>
+    <div id="bios-text">SUNDOWN<br>VIRTUAL CONSOLE</div>
 </div>
 
 <button id="fs-toggle" onclick="toggleFull()">FULLSCREEN</button>
@@ -175,13 +212,32 @@
     
     <div id="screen-container">
         <canvas id="gameCanvas" width="960" height="640"></canvas>
-        <div id="mission-overlay"><div id="mission-title">MISSION 01</div><div id="mission-sub">SECTOR: JUNGLE</div></div>
+        <div id="scanlines"></div>
+        <div id="vignette"></div>
+        
+        <div id="mission-overlay">
+            <div id="mission-title">MISSION 01</div>
+            <div id="mission-sub">SECTOR: JUNGLE</div>
+        </div>
+
         <div id="ui-layer">
-            <div><div id="hp-bar"></div><div id="livesDisplay" style="color:#aaa;">x3</div><div id="grenadeDisplay" style="color:#2ecc71;">FRAG: 3</div></div>
-            <div style="text-align:right;"><span id="scoreDisplay">000000</span><br><span id="stageDisplay" style="color:#f1c40f;">OP 1</span></div>
+            <div>
+                <div id="hp-bar"></div>
+                <div id="livesDisplay" style="color:#aaa;">x3</div>
+                <div id="grenadeDisplay" style="color:#2ecc71;">FRAG: 3</div>
+            </div>
+            <div style="text-align:right;">
+                <span id="scoreDisplay">000000</span><br>
+                <span id="stageDisplay" style="color:#f1c40f;">OP 1</span>
+            </div>
         </div>
         <div id="splash-screen"><div id="splash-text">SUNDOWN INTERACTIVE<br><span style="color:#e74c3c;">2026 PRESENTATION</span></div></div>
-        <div id="title-screen"><h1>URBAN WARFARE</h1><div class="start-msg">TOUCH TO DEPLOY</div></div>
+        
+        <div id="title-screen">
+            <h1>URBAN WARFARE</h1>
+            <div class="start-msg">TOUCH TO DEPLOY</div>
+        </div>
+
         <div id="game-over-screen">
             <h1 style="color:#c0392b;">K.I.A.</h1>
             <div id="final-score" style="color:#fff; margin:10px 0; font-size: 20px;">SCORE: 0</div>
@@ -208,8 +264,6 @@
     let level = 1, score = 0, lives = 3, frameCount = 0, cameraX = 0, shake = 0;
     let keys = {ArrowLeft:false, ArrowRight:false, ArrowUp:false, ArrowDown:false, z:false, x:false, c:false};
     let cPressed = false;
-    
-    // Game Objects
     let player = null;
     let platforms=[], enemies=[], bullets=[], particles=[], debris=[], powerups=[], hazards=[], bgElements=[], bgParticles=[], lights=[];
     let boss = null, goal = null;
@@ -227,7 +281,31 @@
     function bootSystem() { 
         toggleFull(); 
         document.getElementById('ui-overlay').style.display = 'none'; 
-        initGameSystem();
+        
+        // --- RESTORED BIOS SCREEN LOGIC ---
+        const bios = document.getElementById('bios-screen');
+        bios.style.display = 'flex';
+        
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            actx = new AudioContext();
+            if(actx.state === 'suspended') actx.resume();
+
+            // BIOS SOUND: SAWTOOTH DRONE
+            const osc1 = actx.createOscillator();
+            const g1 = actx.createGain();
+            osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(50, actx.currentTime);
+            g1.gain.setValueAtTime(0, actx.currentTime);
+            g1.gain.linearRampToValueAtTime(0.4, actx.currentTime + 1);
+            g1.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 4);
+            osc1.connect(g1); g1.connect(actx.destination);
+            osc1.start(); osc1.stop(actx.currentTime + 4);
+        } catch(e) { console.log("Audio Blocked"); }
+
+        setTimeout(() => {
+            bios.style.display = 'none'; // Hide bios after 4s
+            initGameSystem();
+        }, 4000);
     }
 
     function initGameSystem() {
@@ -235,17 +313,19 @@
         ctx = canvas.getContext('2d');
         ctx.imageSmoothingEnabled = false;
 
+        // Init Audio Buffer
+        try {
+            if(actx) {
+                const b = actx.sampleRate; 
+                noiseBuffer = actx.createBuffer(1, b, actx.sampleRate); 
+                const o = noiseBuffer.getChannelData(0); 
+                for (let i = 0; i < b; i++) o[i] = Math.random() * 2 - 1;
+            }
+        } catch(e){}
+
         const splash = document.getElementById('splash-screen');
         splash.style.display = 'flex';
         
-        // AUDIO INIT
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            actx = new AudioContext();
-            const b = actx.sampleRate; noiseBuffer = actx.createBuffer(1, b, actx.sampleRate);
-            const o = noiseBuffer.getChannelData(0); for (let i = 0; i < b; i++) o[i] = Math.random() * 2 - 1;
-        } catch(e) {}
-
         setTimeout(() => { 
             splash.style.display = 'none';
             document.getElementById('title-screen').style.display = 'flex';
@@ -256,7 +336,6 @@
     }
 
     function bindControls() {
-        const touchHandler = (key, state) => (e) => { e.preventDefault(); keys[key] = state; if(key==='c' && !state) cPressed=false; };
         const setupBtn = (id, key) => {
             const el = document.getElementById(id);
             if(el) {
@@ -295,7 +374,6 @@
         startGame();
     }
 
-    // --- GAME LOGIC ---
     class Player {
         constructor() { this.x=100; this.y=400; this.w=20; this.h=60; this.vx=0; this.vy=0; this.grounded=false; this.faceR=true; this.weapon='normal'; this.shootT=0; this.invul=0; this.state='idle'; this.hp=3; this.grenades=3; }
         update() {
@@ -304,12 +382,16 @@
                 platforms.forEach(p=>{ if(this.x<p.x+p.w && this.x+this.w>p.x && this.y+this.h>p.y && this.y+this.h<p.y+p.h+20 && this.vy>=0){ this.y=p.y-this.h; this.vy=0; this.grounded=true; } });
                 return; 
             }
-            if(keys.ArrowRight){this.vx=4; this.faceR=true; this.state='run';} else if(keys.ArrowLeft){this.vx=-4; this.faceR=false; this.state='run';} else{this.vx*=0.8; this.state='idle';}
+            if(keys.ArrowRight){this.vx=4; this.faceR=true; this.state='run';} 
+            else if(keys.ArrowLeft){this.vx=-4; this.faceR=false; this.state='run';} 
+            else {this.vx*=0.8; this.state='idle';}
+            
             if(keys.z && this.grounded){this.vy=-14; this.grounded=false; playNoise(0.1,100,0.1);}
             if(!this.grounded) this.state='jump';
-            if(this.shootT>0) this.shootT--;
-            if(keys.x && this.shootT<=0) {
-                this.shootT = 12; shake=5; this.vx += this.faceR ? -1 : 1; 
+            
+            if(this.shootT > 0) player.shootT--;
+            if(keys.x && player.shootT<=0) {
+                player.shootT = 12; shake=5; this.vx += this.faceR ? -1 : 1; 
                 playGunShot(); 
                 bullets.push({x:this.x+(this.faceR?50:-20), y:this.y+20, vx:this.faceR?16:-16, vy:0, player:true, active:true, type:'normal'});
                 for(let i=0; i<5; i++) particles.push({x:this.x+(this.faceR?50:-20), y:this.y+20, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:5, color:'#ffaa00'});
@@ -319,7 +401,6 @@
 
             this.vy+=0.6; this.x+=this.vx; this.y+=this.vy;
             this.grounded=false;
-            // FEET COLLISION
             platforms.forEach(p=>{ if(this.x<p.x+p.w && this.x+this.w>p.x && this.y+this.h>p.y && this.y+this.h<p.y+p.h+25 && this.vy>=0){ this.y=p.y-this.h; this.vy=0; this.grounded=true; } });
             
             if(this.y>GH+100) takeDamage(3);
@@ -333,7 +414,6 @@
         bgElements=[]; for(let i=0; i<30; i++) bgElements.push({x:Math.random()*GW*6, y:Math.random()*GH, size:40+Math.random()*120, layer:Math.floor(Math.random()*3)});
         platforms=[]; enemies=[]; powerups=[]; bullets=[]; particles=[]; debris=[]; lights=[];
         
-        // Show mission
         const m = document.getElementById('mission-overlay'); m.style.display='flex';
         document.getElementById('mission-title').innerText = "MISSION "+lvl;
         setTimeout(()=>{m.style.display='none'}, 2500);
@@ -346,7 +426,6 @@
             let gap=50+Math.random()*100, w=300+Math.random()*200, h=Math.min(Math.max(cy+(Math.random()*120)-60, 300), 580);
             if(Math.random()>0.7) gap=150;
             cy=h; platforms.push({x:cx+gap, y:h, w:w, h:100});
-            
             let eCount = 1 + Math.floor(Math.random() * 2); 
             for(let e=0; e<eCount; e++) enemies.push({x:cx+gap+50+Math.random()*(w-100), y:h, hp:3, shootT:0, reactT:40, active:true, vx:1, minX:cx+gap, maxX:cx+gap+w, facingRight:true, hitFlash:0});
             cx+=gap+w;
@@ -356,7 +435,6 @@
 
     function update() {
         if(shake>0) shake--;
-        // bg particles
         if(frameCount%5===0) bgParticles.push({x:cameraX+GW, y:Math.random()*GH, vx:-2, vy:1, life:100, color:'#555'});
         bgParticles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--}); bgParticles=bgParticles.filter(p=>p.life>0);
 
@@ -364,15 +442,12 @@
         if(isTransitioning) {
             if(player.x > cameraX+GW+50) { isTransitioning=false; level++; if(level>20)fullRestart(); else { player=new Player(); generateLevel(level); } }
         } else {
-            // UI
             document.getElementById('livesDisplay').innerText='x'+lives; 
             document.getElementById('scoreDisplay').innerText=score.toString().padStart(6,'0');
             
-            // Enemies
             enemies.forEach(e=>{
                 if(!e.active) return;
                 if(e.hitFlash>0) e.hitFlash--;
-                // AI
                 e.x+=e.vx; if(e.x<e.minX||e.x>e.maxX)e.vx*=-1; e.facingRight=e.vx>0;
                 if(Math.abs(player.x-e.x)<600 && Math.random()<0.02) {
                     playNoise(0.1,600,0.1); 
@@ -380,7 +455,6 @@
                 }
             });
 
-            // Bullets
             bullets.forEach(b=>{
                 if(!b.active) return;
                 b.x+=b.vx; b.y+=b.vy; if(b.type==='grenade') b.vy+=0.5;
@@ -389,7 +463,6 @@
 
                 if(b.player) {
                     enemies.forEach(e=>{
-                        // HITBOX: Bullet vs Enemy Rect
                         if(e.active && b.x > e.x-20 && b.x < e.x+20 && b.y > e.y && b.y < e.y+60) {
                             e.hp--; e.hitFlash=5; b.active=false; 
                             spawnBlood(e.x, b.y);
@@ -409,7 +482,6 @@
     }
 
     function draw() {
-        // Safe Draw
         const bIndex = getBiomeIndex(level); 
         const t = BIOMES[bIndex];
         let grd = ctx.createLinearGradient(0,0,0,GH); grd.addColorStop(0, t.skyTop); grd.addColorStop(1, t.skyBot); 
@@ -419,18 +491,19 @@
         if(shake>0) ctx.translate(Math.random()*5, Math.random()*5);
         ctx.translate(-Math.floor(cameraX), 0);
 
-        // BG
         bgElements.forEach(el => {
             let dx = (el.x - cameraX * (el.layer+1)*0.15) % (GW*2); if(dx<-200) dx+=GW*2;
             ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(dx, GH-el.size*3, el.size, el.size*3);
         });
+        bgParticles.forEach(p=>{ ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI*2); ctx.fill(); });
 
-        // World
-        platforms.forEach(p => { ctx.fillStyle=t.plat; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle=t.detail; ctx.fillRect(p.x, p.y, p.w, 10); });
+        platforms.forEach(p => { 
+            ctx.fillStyle=t.plat; ctx.fillRect(p.x, p.y, p.w, p.h); 
+            ctx.fillStyle=t.detail; ctx.fillRect(p.x, p.y, p.w, 15);
+        });
         
         if(goal) drawSprite(goal.x, goal.y, 'chopper', true, 'idle', frameCount);
 
-        // Sprites
         if(player) {
             enemies.forEach(e => { if(e.active) {
                 if(e.hitFlash>0) ctx.filter='brightness(200%)';
@@ -440,7 +513,6 @@
             if(player.invul%4<2) drawSprite(player.x, player.y, 'player', player.faceR, player.state, frameCount);
         }
 
-        // FX
         bullets.forEach(b => { ctx.fillStyle='#fff'; ctx.fillRect(b.x, b.y, 8, 4); });
         particles.forEach(p => { ctx.fillStyle=p.color||'#fff'; ctx.fillRect(p.x, p.y, 4, 4); });
         debris.forEach(d => { ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.angle); ctx.fillStyle='#aa0'; ctx.fillRect(-3,-1,6,2); ctx.restore(); });
@@ -448,7 +520,7 @@
         ctx.restore();
     }
 
-    // --- SPRITE RENDERER (FEET AT Y=0, DRAW UP) ---
+    // --- RESTORED SPRITE RENDERER ---
     function drawSprite(x,y,t,r,s,f) {
         ctx.save(); 
         ctx.translate(Math.floor(x), Math.floor(y)); 
@@ -456,18 +528,14 @@
 
         if(t==='player'){
             let rc = (s==='run')?Math.sin(f*0.4):0;
-            // Draw relative to feet (0,0)
-            // Legs
-            ctx.fillStyle='#2c3e50'; 
             // Back Leg
-            ctx.save(); ctx.translate(0,-30); ctx.rotate(-rc*0.6); ctx.fillRect(-6,0,12,30); ctx.restore();
+            ctx.save(); ctx.translate(0,-30); ctx.rotate(-rc*0.6); ctx.fillStyle='#2c3e50'; ctx.fillRect(-6,0,12,30); ctx.restore();
             // Front Leg
-            ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); ctx.fillRect(-6,0,12,30); ctx.restore();
+            ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); ctx.fillStyle='#34495e'; ctx.fillRect(-6,0,12,30); ctx.restore();
             // Body
-            ctx.fillStyle='#111'; ctx.fillRect(-10,-55, 20, 30); // Vest
+            ctx.fillStyle='#111'; ctx.fillRect(-10,-55, 20, 30); 
             // Head
-            ctx.fillStyle='#2c3e50'; ctx.fillRect(-8,-65, 16, 14); // Helmet
-            ctx.fillStyle='#0f0'; ctx.fillRect(2,-60, 8, 4); // Visor
+            ctx.fillStyle='#2c3e50'; ctx.fillRect(-8,-65, 16, 14); ctx.fillStyle='#0f0'; ctx.fillRect(2,-60, 8, 4); 
             // Gun
             ctx.fillStyle='#000'; ctx.fillRect(0,-40, 30, 6);
         } 
@@ -475,11 +543,10 @@
             let rc = (s==='run')?Math.sin(f*0.4):0;
             ctx.fillStyle='#5d4037'; 
             ctx.save(); ctx.translate(0,-30); ctx.rotate(-rc*0.6); ctx.fillRect(-6,0,12,30); ctx.restore();
-            ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); ctx.fillRect(-6,0,12,30); ctx.restore();
-            ctx.fillStyle='#3e2723'; ctx.fillRect(-10,-55, 20, 30); 
-            ctx.fillStyle='#d7ccc8'; ctx.fillRect(-8,-65, 16, 14); 
-            ctx.fillStyle='#c0392b'; ctx.fillRect(-8,-68, 16, 4); // Beret
-            ctx.fillStyle='#000'; ctx.fillRect(0,-40, 30, 6); // Gun
+            ctx.fillStyle='#795548'; ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); ctx.fillRect(-6,0,12,30); ctx.restore();
+            ctx.translate(0,-32); ctx.fillStyle='#3e2723'; ctx.fillRect(-10,-22,20,24); 
+            ctx.save(); ctx.translate(0,-24); ctx.fillStyle='#d7ccc8'; ctx.fillRect(-8,-10,16,14); ctx.fillStyle='#c0392b'; ctx.fillRect(-8,-12,16,4); ctx.restore();
+            ctx.save(); ctx.translate(4,-16); ctx.fillStyle='#000'; ctx.fillRect(0,0,24,6); ctx.restore();
         }
         else if (t==='chopper') {
             ctx.fillStyle='#000'; ctx.fillRect(-40,-40,80,30); ctx.fillRect(-80,-40,160,2);
@@ -494,6 +561,8 @@
     function spawnShell(x,y,r) { debris.push({x:x,y:y,vx:r?-2:2,vy:-4,angle:0}); }
     function takeDamage(n) { if(player.invul>0)return; player.hp-=n; player.invul=50; spawnBlood(player.x,player.y-30); if(player.hp<=0) die(); }
     function die() { lives--; if(lives<=0){ isGameRunning=false; document.getElementById('game-over-screen').style.display='flex'; } else { player.x=cameraX+100; player.y=100; player.vy=0; player.hp=3; } }
+    
+    // RESTORED COMPLEX AUDIO
     function playGunShot(){ try{ if(!actx)return; const o=actx.createOscillator(); const g=actx.createGain(); o.type='square'; o.frequency.value=100; g.gain.value=0.1; g.gain.exponentialRampToValueAtTime(0.01,actx.currentTime+0.1); o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+0.1); }catch(e){} }
     function playNoise(){ try{ if(!actx)return; const s=actx.createBufferSource(); s.buffer=noiseBuffer; const g=actx.createGain(); g.gain.value=0.1; g.gain.exponentialRampToValueAtTime(0.01,actx.currentTime+0.1); s.connect(g); g.connect(actx.destination); s.start(); s.stop(actx.currentTime+0.1); }catch(e){} }
 
