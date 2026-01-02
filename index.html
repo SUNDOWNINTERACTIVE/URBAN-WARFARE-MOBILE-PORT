@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: BIOS EDITION</title>
+    <title>URBAN WARFARE: FINAL</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Press+Start+2P&family=Rajdhani:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@700&display=swap');
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none; -webkit-user-select: none; }
 
@@ -116,14 +116,14 @@
         /* SCREENS & BIOS */
         #ui-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9999; background: #080808; display: flex; flex-direction: column;
+            z-index: 99999; background: #080808; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
         }
         #boot-btn, .menu-btn {
             background: transparent; border: 2px solid #fff;
             color: #fff; padding: 20px 50px; font-family: 'Black Ops One'; font-size: 24px;
             cursor: pointer; animation: pulse 1.5s infinite; letter-spacing: 2px;
-            text-transform: uppercase; margin-top: 20px;
+            text-transform: uppercase; margin-top: 20px; pointer-events: auto;
         }
         #boot-btn:active { background: #fff; color: #000; }
         #fs-toggle {
@@ -132,10 +132,10 @@
             padding: 5px 10px; font-size: 8px; z-index: 10000; cursor: pointer;
         }
 
-        /* BOOT SEQUENCE ANIMATION */
+        /* BOOT SEQUENCE ANIMATION - Fixed Z-Index */
         #bios-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 300;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 20000; /* HIGHEST PRIORITY */
             display: none; flex-direction: column; justify-content: center; align-items: center;
         }
         #bios-logo {
@@ -196,6 +196,11 @@
     <button id="boot-btn" onclick="bootSystem()">POWER ON</button>
 </div>
 
+<div id="bios-screen">
+    <div id="bios-logo"></div>
+    <div id="bios-text">SUNDOWN<br>VIRTUAL CONSOLE</div>
+</div>
+
 <button id="fs-toggle" onclick="toggleFull()">FULLSCREEN</button>
 
 <div id="console-body">
@@ -216,11 +221,6 @@
         <div id="scanlines"></div>
         <div id="vignette"></div>
         
-        <div id="bios-screen">
-            <div id="bios-logo"></div>
-            <div id="bios-text">SUNDOWN<br>VIRTUAL CONSOLE</div>
-        </div>
-
         <div id="mission-overlay">
             <div id="mission-title">MISSION 01</div>
             <div id="mission-sub">SECTOR: JUNGLE</div>
@@ -273,11 +273,10 @@
         const bios = document.getElementById('bios-screen');
         bios.style.display = 'flex';
         
-        // BIOS AUDIO (Simulated PS1 Boot)
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const actx = new AudioContext();
-        
-        // Deep Drone
+        if(actx.state === 'suspended') actx.resume();
+
         const osc1 = actx.createOscillator();
         const g1 = actx.createGain();
         osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(50, actx.currentTime);
@@ -286,16 +285,6 @@
         g1.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 4);
         osc1.connect(g1); g1.connect(actx.destination);
         osc1.start(); osc1.stop(actx.currentTime + 4);
-
-        // Twinkle
-        const osc2 = actx.createOscillator();
-        const g2 = actx.createGain();
-        osc2.type = 'sine'; osc2.frequency.setValueAtTime(800, actx.currentTime);
-        g2.gain.setValueAtTime(0, actx.currentTime);
-        g2.gain.linearRampToValueAtTime(0.2, actx.currentTime + 0.5);
-        g2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 3);
-        osc2.connect(g2); g2.connect(actx.destination);
-        osc2.start(); osc2.stop(actx.currentTime + 3);
 
         setTimeout(() => {
             bios.style.display = 'none';
@@ -599,6 +588,7 @@
 
         function drawSprite(x,y,t,r,s,f) {
             ctx.save(); 
+            // ALIGNMENT FIX: Draw UP from feet
             ctx.translate(Math.floor(x), Math.floor(y + (t==='player'?player.h:player.h))); 
             if(!r) ctx.scale(-1,1);
 
@@ -606,68 +596,77 @@
                 let rc = (s==='run') ? Math.sin(f * 0.4) : 0;
                 let bob = (s==='idle') ? Math.sin(f * 0.1)*1 : 0;
                 
-                // LEGS
+                // --- LEGS ---
+                // Back Leg
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*-0.6); 
-                ctx.fillStyle='#2c3e50'; ctx.fillRect(-6,0,12,16); 
+                ctx.fillStyle='#2c3e50'; ctx.fillRect(-6,0,12,16); // Thigh
                 ctx.translate(0,14); ctx.rotate(rc>0?rc*0.8:0); 
-                ctx.fillStyle='#2c3e50'; ctx.fillRect(-5,0,10,14); 
-                ctx.fillStyle='#000'; ctx.fillRect(-6,14,14,6); 
+                ctx.fillStyle='#2c3e50'; ctx.fillRect(-5,0,10,14); // Shin
+                ctx.fillStyle='#000'; ctx.fillRect(-6,14,14,6); // Boot
                 ctx.restore();
 
+                // Front Leg
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); 
                 ctx.fillStyle='#34495e'; ctx.fillRect(-6,0,12,16); 
-                ctx.fillStyle='#111'; ctx.fillRect(-7,6,14,6); 
+                ctx.fillStyle='#111'; ctx.fillRect(-7,6,14,6); // Knee Pad
                 ctx.translate(0,14); ctx.rotate(rc<0?-rc*0.8:0); 
                 ctx.fillStyle='#34495e'; ctx.fillRect(-5,0,10,14); 
                 ctx.fillStyle='#000'; ctx.fillRect(-6,14,14,6); 
                 ctx.restore();
 
-                // TORSO
+                // --- TORSO ---
                 ctx.translate(0, -32+bob);
-                ctx.fillStyle='#1a1a1a'; ctx.fillRect(-10,-24,20,26); 
-                ctx.fillStyle='#222'; ctx.fillRect(-11,-20,22,12); 
-                ctx.fillStyle='#333'; ctx.fillRect(-8,-18,6,8); ctx.fillRect(2,-18,6,8); 
+                ctx.fillStyle='#1a1a1a'; ctx.fillRect(-10,-24,20,26); // Plate Carrier
+                ctx.fillStyle='#222'; ctx.fillRect(-11,-20,22,12); // Vest pouches
+                ctx.fillStyle='#333'; ctx.fillRect(-8,-18,6,8); ctx.fillRect(2,-18,6,8); // Mags
 
-                // HEAD
+                // --- HEAD ---
                 ctx.save(); ctx.translate(0,-26); ctx.rotate(0.1);
-                ctx.fillStyle='#2c3e50'; 
+                ctx.fillStyle='#2c3e50'; // Helmet Color
                 ctx.beginPath(); ctx.arc(0,0,11,Math.PI,0); ctx.lineTo(11,8); ctx.lineTo(-11,8); ctx.fill();
-                ctx.fillStyle='#111'; ctx.fillRect(-10,0,20,4); 
-                ctx.fillStyle='#0f0'; ctx.shadowColor='#0f0'; ctx.shadowBlur=10; 
+                ctx.fillStyle='#111'; ctx.fillRect(-10,0,20,4); // Goggle Mount
+                ctx.fillStyle='#0f0'; ctx.shadowColor='#0f0'; ctx.shadowBlur=10; // NVG
                 ctx.fillRect(4,-2,8,5); ctx.shadowBlur=0;
                 ctx.restore();
 
-                // ARMS
+                // --- ARMS & WEAPON ---
                 ctx.save(); ctx.translate(4,-18); ctx.rotate(bob*0.05);
+                // Back Arm
                 ctx.fillStyle='#2c3e50'; ctx.fillRect(-6,0,8,16); 
-                ctx.fillStyle='#000'; ctx.fillRect(-6,6,12,6); 
-                ctx.fillStyle='#222'; ctx.fillRect(6,4,20,8); 
-                ctx.fillStyle='#111'; ctx.fillRect(10,12,6,10); 
-                ctx.fillStyle='#000'; ctx.fillRect(26,6,14,4); 
-                ctx.fillStyle='#444'; ctx.fillRect(12,0,8,4); 
+                // Gun
+                ctx.fillStyle='#000'; ctx.fillRect(-6,6,12,6); // Stock
+                ctx.fillStyle='#222'; ctx.fillRect(6,4,20,8); // Receiver
+                ctx.fillStyle='#111'; ctx.fillRect(10,12,6,10); // Mag
+                ctx.fillStyle='#000'; ctx.fillRect(26,6,14,4); // Barrel
+                ctx.fillStyle='#444'; ctx.fillRect(12,0,8,4); // Holosight
+                // Front Arm
                 ctx.rotate(-0.2);
-                ctx.fillStyle='#34495e'; ctx.fillRect(0,0,14,6); 
-                ctx.fillStyle='#111'; ctx.fillRect(14,0,6,6); 
+                ctx.fillStyle='#34495e'; ctx.fillRect(0,0,14,6); // Forearm
+                ctx.fillStyle='#111'; ctx.fillRect(14,0,6,6); // Glove
                 ctx.restore();
             }
             else if (t==='enemy') { 
                 let rc = (s==='run') ? Math.sin(f * 0.4) : 0;
-                ctx.fillStyle='#5d4037'; 
+                // Legs
+                ctx.fillStyle='#5d4037'; // Tan Pants
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*-0.6); ctx.fillRect(-6,0,12,30); ctx.fillStyle='#000'; ctx.fillRect(-7,30,14,6); ctx.restore();
                 ctx.fillStyle='#795548'; 
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); ctx.fillRect(-6,0,12,30); ctx.fillStyle='#000'; ctx.fillRect(-7,30,14,6); ctx.restore();
+                // Torso
                 ctx.translate(0,-32);
-                ctx.fillStyle='#3e2723'; ctx.fillRect(-10,-22,20,24); 
-                ctx.fillStyle='#111'; ctx.fillRect(-10,-20,20,12); 
+                ctx.fillStyle='#3e2723'; ctx.fillRect(-10,-22,20,24); // Shirt
+                ctx.fillStyle='#111'; ctx.fillRect(-10,-20,20,12); // Rig
+                // Head
                 ctx.save(); ctx.translate(0,-24);
-                ctx.fillStyle='#d7ccc8'; ctx.fillRect(-8,-10,16,14); 
-                ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.moveTo(-10,-6); ctx.lineTo(10,-10); ctx.lineTo(12,0); ctx.lineTo(-10,0); ctx.fill(); 
-                ctx.fillStyle='#000'; ctx.fillRect(0,-4,10,4); 
+                ctx.fillStyle='#d7ccc8'; ctx.fillRect(-8,-10,16,14); // Skin
+                ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.moveTo(-10,-6); ctx.lineTo(10,-10); ctx.lineTo(12,0); ctx.lineTo(-10,0); ctx.fill(); // Beret
+                ctx.fillStyle='#000'; ctx.fillRect(0,-4,10,4); // Shades
                 ctx.restore();
+                // Gun (AK)
                 ctx.save(); ctx.translate(4,-16); 
-                ctx.fillStyle='#5d4037'; ctx.fillRect(-8,6,10,4); 
-                ctx.fillStyle='#000'; ctx.fillRect(2,4,24,6); 
-                ctx.fillStyle='#000'; ctx.beginPath(); ctx.moveTo(12,10); ctx.quadraticCurveTo(8,20,4,18); ctx.lineTo(8,10); ctx.fill(); 
+                ctx.fillStyle='#5d4037'; ctx.fillRect(-8,6,10,4); // Stock
+                ctx.fillStyle='#000'; ctx.fillRect(2,4,24,6); // Body
+                ctx.fillStyle='#000'; ctx.beginPath(); ctx.moveTo(12,10); ctx.quadraticCurveTo(8,20,4,18); ctx.lineTo(8,10); ctx.fill(); // Mag
                 ctx.restore();
             }
             else if (t==='boss') {
