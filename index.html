@@ -3,141 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: PRO CONSOLE</title>
+    <title>URBAN WARFARE: ERGO</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Press+Start+2P&family=Rajdhani:wght@600&display=swap');
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none; -webkit-user-select: none; }
 
         body {
-            margin: 0;
-            background-color: #080808;
-            height: 100vh; height: 100dvh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            margin: 0; background-color: #080808;
+            height: 100vh; height: 100dvh; width: 100vw;
+            overflow: hidden; display: flex; flex-direction: column;
             font-family: 'Press Start 2P', cursive;
         }
 
-        /* --- LAYOUT CONTAINER --- */
-        /* This Flexbox splits the screen into: [LEFT GRIP] [SCREEN] [RIGHT GRIP] */
         #console-body {
-            display: flex;
-            flex-direction: row;
-            width: 100%; height: 100%;
-            align-items: stretch;
-            background: #111;
+            display: flex; flex-direction: row; width: 100%; height: 100%;
+            align-items: stretch; background: #111;
         }
 
-        /* --- THE GRIPS (BORDERS) --- */
         .grip-zone {
-            flex: 1; /* Take up available space */
-            min-width: 140px; /* Ensure space for thumbs */
+            flex: 1; min-width: 140px;
             background: #161616;
             background-image: radial-gradient(circle, #222 1px, transparent 1px);
             background-size: 10px 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            z-index: 50;
+            display: flex; justify-content: center; 
+            /* Align items center usually, but we will override for offsets */
+            align-items: center; 
+            position: relative; z-index: 50;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
         
         #left-grip { border-right: 2px solid #333; }
         #right-grip { border-left: 2px solid #333; }
 
-        /* --- THE GAME SCREEN --- */
-        #screen-container {
-            flex-grow: 0;
-            /* Force aspect ratio of game */
-            aspect-ratio: 3/2; 
-            height: 100%; /* Fill height first */
-            max-width: calc(100% - 280px); /* Don't squash grips */
-            
-            background: #000;
-            position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
-            overflow: hidden;
+        /* --- ERGONOMIC ADJUSTMENTS --- */
+        /* Move Left D-Pad DOWN to avoid camera lens in landscape */
+        #left-grip .control-wrapper {
+            margin-top: 80px; /* Pushes the D-Pad down */
         }
         
-        /* If screen is too narrow (Portrait), stack them */
+        /* Move Right Buttons slightly UP or Center for thumb reach */
+        #right-grip .control-wrapper {
+            margin-bottom: 20px;
+        }
+
+        #screen-container {
+            flex-grow: 0; aspect-ratio: 3/2; height: 100%; max-width: calc(100% - 280px);
+            background: #000; position: relative; box-shadow: 0 0 50px rgba(0,0,0,1); overflow: hidden;
+        }
+
         @media (max-aspect-ratio: 1/1) {
             #console-body { flex-direction: column; }
-            #screen-container { 
-                width: 100%; height: auto; max-width: 100%; 
-                border-bottom: 2px solid #333;
-            }
+            #screen-container { width: 100%; height: auto; max-width: 100%; border-bottom: 2px solid #333; }
             .grip-zone { min-height: 150px; }
-            #left-grip { border-right: none; border-bottom: 1px solid #222; }
-            #right-grip { border-left: none; }
-            
-            /* Hide the D-Pad/Buttons in the wrong zones for portrait */
             #left-grip { display: none; } 
             #right-grip { flex-direction: row; justify-content: space-between; padding: 0 20px; }
-            /* This is a simplified fallback, but landscape is preferred */
         }
 
         canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
 
-        /* --- CONTROLS --- */
-        
-        /* D-PAD */
-        .d-pad {
-            position: relative; width: 140px; height: 140px;
-        }
+        /* CONTROLS STYLING */
+        .d-pad { position: relative; width: 140px; height: 140px; }
         .d-btn {
-            position: absolute; 
-            background: #2a2a2a; 
-            border: 2px solid #111; 
+            position: absolute; background: #2a2a2a; border: 2px solid #111; 
             box-shadow: inset 0 2px 3px rgba(255,255,255,0.1), 0 5px 10px rgba(0,0,0,0.5);
-            transition: transform 0.05s;
         }
         .d-btn:active { background: #444; transform: scale(0.95); }
-        
         #vb-up { top: 0; left: 35%; width: 30%; height: 35%; border-radius: 5px 5px 0 0; }
         #vb-down { bottom: 0; left: 35%; width: 30%; height: 35%; border-radius: 0 0 5px 5px; }
         #vb-left { top: 35%; left: 0; width: 35%; height: 30%; border-radius: 5px 0 0 5px; }
         #vb-right { top: 35%; right: 0; width: 35%; height: 30%; border-radius: 0 5px 5px 0; }
         .d-center { position: absolute; top: 35%; left: 35%; width: 30%; height: 30%; background:#2a2a2a; }
 
-        /* ACTION BUTTONS */
-        .btn-cluster {
-            position: relative; width: 140px; height: 140px;
-            transform: rotate(-10deg);
-        }
+        .btn-cluster { position: relative; width: 140px; height: 140px; transform: rotate(-10deg); }
         .pro-btn {
-            position: absolute;
-            width: 60px; height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #333, #222);
-            border: 2px solid #111;
-            color: #777;
-            display: flex; justify-content: center; align-items: center;
+            position: absolute; width: 60px; height: 60px; border-radius: 50%;
+            background: linear-gradient(145deg, #333, #222); border: 2px solid #111;
+            color: #777; display: flex; justify-content: center; align-items: center;
             font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: bold;
-            box-shadow: 5px 5px 10px #0b0b0b, -5px -5px 10px #222; /* Neumorphism style */
+            box-shadow: 5px 5px 10px #0b0b0b, -5px -5px 10px #222;
         }
-        .pro-btn:active { 
-            box-shadow: inset 5px 5px 10px #0b0b0b, inset -5px -5px 10px #222;
-            color: #fff;
-        }
-
-        #vb-shoot { top: 10px; right: 5px; border-bottom: 4px solid #c0392b; color: #c0392b; } /* A */
-        #vb-jump { bottom: 10px; left: 5px; border-bottom: 4px solid #2980b9; color: #2980b9; } /* B */
+        .pro-btn:active { box-shadow: inset 5px 5px 10px #0b0b0b, inset -5px -5px 10px #222; color: #fff; }
+        #vb-shoot { top: 10px; right: 5px; border-bottom: 4px solid #c0392b; color: #c0392b; }
+        #vb-jump { bottom: 10px; left: 5px; border-bottom: 4px solid #2980b9; color: #2980b9; }
         
-        /* Shoulder Button (Grenade) */
+        /* Shoulder button stays at top of grip */
         .shoulder-btn {
-            position: absolute; top: 20px; right: 20px;
-            width: 80px; height: 30px;
+            position: absolute; top: 20px; right: 20px; width: 80px; height: 30px;
             background: #333; border: 1px solid #555; border-radius: 4px;
-            color: #aaa; font-size: 10px; letter-spacing: 1px;
-            display: flex; justify-content: center; align-items: center;
+            color: #aaa; font-size: 10px; letter-spacing: 1px; display: flex; justify-content: center; align-items: center;
             box-shadow: 0 4px 0 #111;
         }
         .shoulder-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #111; background: #2ecc71; color: #000; }
 
-        /* --- CRT FX --- */
         #scanlines {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%);
@@ -149,7 +107,6 @@
             pointer-events: none; z-index: 11;
         }
 
-        /* --- HUD --- */
         #ui-layer {
             position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); pointer-events: none;
             display: none; justify-content: space-between; align-items: flex-start;
@@ -158,11 +115,9 @@
         #hp-bar { display: flex; gap: 4px; margin-bottom: 4px; }
         .heart { width: 10px; height: 10px; background: #e74c3c; display: inline-block; border: 1px solid #fff; box-shadow: 1px 1px 0 #000;}
 
-        /* --- BOOT UI --- */
         #ui-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9999; background: #080808;
-            display: flex; flex-direction: column;
+            z-index: 9999; background: #080808; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
         }
         #boot-btn {
@@ -170,28 +125,24 @@
             color: #e74c3c; padding: 20px 40px; font-family: 'Black Ops One'; font-size: 20px;
             cursor: pointer; animation: pulse 1.5s infinite; letter-spacing: 2px;
         }
-        #boot-btn:active { background: #e74c3c; color: #000; }
         #fs-toggle {
             position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
             background: #222; border: 1px solid #444; color: #666;
             padding: 5px 10px; font-size: 8px; z-index: 10000; cursor: pointer;
         }
 
-        /* --- MENUS --- */
         #splash-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;
             display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
             animation: fadeOutSplash 4s forwards;
         }
         #splash-text { color: #fff; font-family: 'Black Ops One'; font-size: 20px; text-align: center; opacity: 0; animation: fadeInOutText 3s ease-in-out; }
-
         #title-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
             display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center;
         }
         h1 { font-family: 'Black Ops One'; color: #e74c3c; font-size: 40px; margin: 0; animation: pulse 3s infinite; text-shadow: 0 0 20px rgba(231,76,60,0.5); }
         .start-msg { margin-top: 20px; font-size: 12px; color: #fff; animation: blink 1s infinite; }
-
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes blink { 50% { opacity: 0; } }
         @keyframes fadeInOutText { 0%, 100% { opacity: 0; } 20%, 80% { opacity: 1; } }
@@ -209,20 +160,21 @@
 
 <div id="console-body">
     <div class="grip-zone" id="left-grip">
-        <div class="d-pad">
-            <div class="d-center"></div>
-            <div class="d-btn" id="vb-up"></div>
-            <div class="d-btn" id="vb-down"></div>
-            <div class="d-btn" id="vb-left"></div>
-            <div class="d-btn" id="vb-right"></div>
+        <div class="control-wrapper">
+            <div class="d-pad">
+                <div class="d-center"></div>
+                <div class="d-btn" id="vb-up"></div>
+                <div class="d-btn" id="vb-down"></div>
+                <div class="d-btn" id="vb-left"></div>
+                <div class="d-btn" id="vb-right"></div>
+            </div>
         </div>
     </div>
-
+    
     <div id="screen-container">
         <canvas id="gameCanvas" width="600" height="400"></canvas>
         <div id="scanlines"></div>
         <div id="vignette"></div>
-
         <div id="ui-layer">
             <div>
                 <div id="hp-bar"></div>
@@ -234,36 +186,25 @@
                 <span id="stageDisplay" style="color:#f1c40f;">OP 1</span>
             </div>
         </div>
-
         <div id="splash-screen"><div id="splash-text">SUNDOWN INTERACTIVE<br><span style="color:#e74c3c;">2026</span></div></div>
         <div id="title-screen"><h1>URBAN WARFARE</h1><div class="start-msg">TOUCH TO START</div></div>
     </div>
-
+    
     <div class="grip-zone" id="right-grip">
         <div class="shoulder-btn" id="vb-grenade">GRENADE</div>
-        <div class="btn-cluster">
-            <div class="pro-btn" id="vb-shoot">FIRE</div>
-            <div class="pro-btn" id="vb-jump">JUMP</div>
+        <div class="control-wrapper">
+            <div class="btn-cluster">
+                <div class="pro-btn" id="vb-shoot">FIRE</div>
+                <div class="pro-btn" id="vb-jump">JUMP</div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    function toggleFull() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(e => { console.log(e); });
-        } else {
-            if (document.exitFullscreen) document.exitFullscreen();
-        }
-    }
+    function toggleFull() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => { console.log(e); }); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    function bootSystem() { toggleFull(); document.getElementById('ui-overlay').style.display = 'none'; initGame(); }
 
-    function bootSystem() {
-        toggleFull();
-        document.getElementById('ui-overlay').style.display = 'none';
-        initGame();
-    }
-
-    /* --- GAME ENGINE --- */
     function initGame() {
         const title = document.getElementById('title-screen');
         setTimeout(() => { title.style.display = 'flex'; void title.offsetWidth; title.style.opacity = '1'; }, 3500);
@@ -272,11 +213,7 @@
         let actx, noiseBuffer, musicInterval = null, musicEnabled = true, currentNote = 0;
         const MUSIC_TRACKS = { 0: [110, 110, 0, 123, 110, 0, 130, 0], 1: [82, 0, 82, 82, 98, 0, 82, 123], boss: [110, 123, 130, 146, 110, 123, 130, 164] };
 
-        function initAudio() { 
-            try { if (!actx) { actx = new AudioContext(); const b = actx.sampleRate; noiseBuffer = actx.createBuffer(1, b, actx.sampleRate); const o = noiseBuffer.getChannelData(0); for (let i = 0; i < b; i++) o[i] = Math.random() * 2 - 1; } if (actx.state === 'suspended') actx.resume(); } catch(e){}
-        }
-
-        // HEAVY GUN SOUNDS
+        function initAudio() { try { if (!actx) { actx = new AudioContext(); const b = actx.sampleRate; noiseBuffer = actx.createBuffer(1, b, actx.sampleRate); const o = noiseBuffer.getChannelData(0); for (let i = 0; i < b; i++) o[i] = Math.random() * 2 - 1; } if (actx.state === 'suspended') actx.resume(); } catch(e){} }
         function playGunShot() {
             if(!actx || !musicEnabled) return;
             const t = actx.currentTime;
@@ -291,13 +228,7 @@
         function startMusic(idx) {
             if(musicInterval) clearInterval(musicInterval); if(!musicEnabled) return;
             let track = MUSIC_TRACKS[idx] || MUSIC_TRACKS[0]; currentNote = 0;
-            musicInterval = setInterval(() => {
-                if(!isGameRunning) return;
-                let freq = track[currentNote % track.length];
-                if(freq > 0) playSynth(freq, 'sawtooth', 0.1, 0.05);
-                if(currentNote % 4 === 0) playNoise(0.05, 100, 0.2);
-                currentNote++;
-            }, 150);
+            musicInterval = setInterval(() => { if(!isGameRunning) return; let freq = track[currentNote % track.length]; if(freq > 0) playSynth(freq, 'sawtooth', 0.1, 0.05); if(currentNote % 4 === 0) playNoise(0.05, 100, 0.2); currentNote++; }, 150);
         }
         function playSynth(f,t,d,v){if(!actx)return;const o=actx.createOscillator();const g=actx.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}
         function playNoise(d,f,v){if(!actx)return;const s=actx.createBufferSource();s.buffer=noiseBuffer;const fl=actx.createBiquadFilter();fl.frequency.value=f;const g=actx.createGain();g.gain.setValueAtTime(v,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,actx.currentTime+d);s.connect(fl);fl.connect(g);g.connect(actx.destination);s.start();s.stop(actx.currentTime+d);}
@@ -305,7 +236,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingEnabled = false;
-        const GW=600; const GH=400; // Original resolution
+        const GW=600; const GH=400; 
         let isGameRunning=false; let level=1; let score=0; let lives=3; let frameCount=0; let cameraX=0; let shake=0;
         const keys={ArrowLeft:false,ArrowRight:false,ArrowUp:false,ArrowDown:false,z:false,x:false,c:false};
         let cPressed=false;
@@ -313,26 +244,21 @@
         window.addEventListener('keydown', e => { if(keys.hasOwnProperty(e.key)) keys[e.key]=true; if(e.key==="Enter"&&!isGameRunning&&title.style.display==='flex') startGame(); });
         window.addEventListener('keyup', e => { if(keys.hasOwnProperty(e.key)) keys[e.key]=false; if(e.key==='c') cPressed=false; });
 
-        // VIRTUAL BINDING
         function bindTouch(id, key) {
-            const el = document.getElementById(id);
-            if(!el) return;
+            const el = document.getElementById(id); if(!el) return;
             const handlerStart = (e) => { e.preventDefault(); keys[key] = true; if(!isGameRunning && title.style.display==='flex' && (key==='z'||key==='x')) startGame(); };
             const handlerEnd = (e) => { e.preventDefault(); keys[key] = false; if(key==='c') cPressed=false; };
-            el.addEventListener('touchstart', handlerStart, {passive:false});
-            el.addEventListener('touchend', handlerEnd, {passive:false});
-            el.addEventListener('mousedown', handlerStart);
-            el.addEventListener('mouseup', handlerEnd);
+            el.addEventListener('touchstart', handlerStart, {passive:false}); el.addEventListener('touchend', handlerEnd, {passive:false});
+            el.addEventListener('mousedown', handlerStart); el.addEventListener('mouseup', handlerEnd);
         }
         bindTouch('vb-left', 'ArrowLeft'); bindTouch('vb-right', 'ArrowRight'); bindTouch('vb-up', 'ArrowUp'); bindTouch('vb-down', 'ArrowDown');
         bindTouch('vb-jump', 'z'); bindTouch('vb-shoot', 'x'); bindTouch('vb-grenade', 'c');
         
-        // Start on title tap (Screen)
         document.getElementById('title-screen').addEventListener('touchstart', (e) => { e.preventDefault(); if(!isGameRunning) startGame(); });
         document.getElementById('title-screen').addEventListener('mousedown', (e) => { e.preventDefault(); if(!isGameRunning) startGame(); });
 
         let player=null, platforms=[], enemies=[], bullets=[], particles=[], debris=[], powerups=[], hazards=[], boss=null, goal=null;
-        let bgElements=[], bgParticles=[], bloodPools=[];
+        let bgElements=[], bgParticles=[], bloodPools=[], lights=[];
 
         const BIOMES = [
             { name: "JUNGLE", skyTop:'#87CEEB', skyBot:'#228B22', plat:'#3d5c25', detail:'#1e3315' },
@@ -364,14 +290,18 @@
                 if(type==='rocket') { speed=this.faceR?5:-5; playNoise(0.5,100,0.4); } else { playGunShot(); } 
                 bullets.push({x:this.x+(this.faceR?40:-15), y:this.y+22, vx:speed, vy:0, player:true, active:true, type:type});
                 if(this.weapon==='spread'){ bullets.push({x:this.x,y:this.y+22,vx:speed,vy:-2,player:true,active:true,type:'normal'}); bullets.push({x:this.x,y:this.y+22,vx:speed,vy:2,player:true,active:true,type:'normal'}); }
-                particles.push({x:this.x+(this.faceR?45:-20), y:this.y+22, vx:0, vy:0, life:3, type:'muzzle', size:20});
+                
+                // Muzzle Flash
+                for(let i=0; i<6; i++) particles.push({x:this.x+(this.faceR?45:-20), y:this.y+22, vx:(Math.random()-0.5)*2+(this.faceR?2:-2), vy:(Math.random()-0.5)*2, life:5, type:'flash', size:Math.random()*8, color:Math.random()>0.5?'#fff':'#ffaa00'});
+                lights.push({x:this.x+(this.faceR?45:-20), y:this.y+22, size:150, intensity:0.6, color:'rgba(255,200,100,0.3)', life:3});
+                
                 spawnShell(this.x + (this.faceR?10:15), this.y+20, this.faceR);
             }
             throwGrenade() { this.grenades--; bullets.push({x:this.x, y:this.y, vx:this.faceR?6:-6, vy:-8, player:true, active:true, type:'grenade'}); playNoise(0.1,400,0.2); }
         }
 
         function initBackground(lvl) {
-            bgElements=[]; bgParticles=[]; bloodPools=[]; debris=[];
+            bgElements=[]; bgParticles=[]; bloodPools=[]; debris=[]; lights=[];
             const bIndex = getBiomeIndex(lvl);
             for(let i=0; i<40; i++) bgElements.push({x:Math.random()*GW*6, y:Math.random()*GH, size:20+Math.random()*80, type:bIndex, layer:Math.floor(Math.random()*3)});
         }
@@ -399,9 +329,13 @@
             }
         }
 
-        // --- GORE & PARTICLES ---
-        function spawnExplosion(x,y,r) { shake=20; playNoise(0.5,100,0.6); for(let i=0;i<30;i++)particles.push({x:x,y:y,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,life:30,type:'fire',size:Math.random()*20}); enemies.forEach(e=>{if(e.active&&Math.hypot(e.x-x,e.y-y)<r){e.hp-=5;if(e.hp<=0)killEnemy(e);}}); if(boss&&boss.active&&Math.hypot(boss.x-x,boss.y-y)<r)boss.hp-=5; if(Math.hypot(player.x-x,player.y-y)<r)takeDamage(1); }
-        function spawnBlood(x,y,c) { for(let i=0;i<c;i++)particles.push({x:x,y:y,vx:(Math.random()-.5)*12,vy:(Math.random()-.5)*12,life:60,type:'blood',size:3}); }
+        function spawnExplosion(x,y,r) { 
+            shake=20; playNoise(0.5,100,0.6); 
+            for(let i=0;i<30;i++)particles.push({x:x,y:y,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,life:30,type:'fire',size:Math.random()*20, color:'#f39c12'}); 
+            lights.push({x:x, y:y, size:r*3, intensity:0.8, color:'rgba(255,100,50,0.5)', life:10});
+            enemies.forEach(e=>{if(e.active&&Math.hypot(e.x-x,e.y-y)<r){e.hp-=5;if(e.hp<=0)killEnemy(e);}}); if(boss&&boss.active&&Math.hypot(boss.x-x,boss.y-y)<r)boss.hp-=5; if(Math.hypot(player.x-x,player.y-y)<r)takeDamage(1); 
+        }
+        function spawnBlood(x,y,c) { for(let i=0;i<c;i++)particles.push({x:x,y:y,vx:(Math.random()-.5)*12,vy:(Math.random()-.5)*12,life:60,type:'blood',size:3, color:'#b00'}); }
         function spawnLimb(x,y,t) { debris.push({x:x,y:y,vx:(Math.random()-.5)*10,vy:-5-Math.random()*5,w:(t==='torso'?15:8),h:8,type:'limb',part:t,angle:Math.random()*6,vAngle:(Math.random()-.5)*0.5,grounded:false}); }
         function spawnShell(x, y, faceR) { debris.push({x: x, y: y, vx: faceR ? -2 - Math.random() : 2 + Math.random(), vy: -3 - Math.random() * 2, w: 4, h: 2, type: 'shell', angle: Math.random() * 6, vAngle: (Math.random() - 0.5), grounded: false}); }
 
@@ -423,7 +357,12 @@
                 if(!e.active) return;
                 e.x+=e.vx; if(e.x<e.minX||e.x>e.maxX)e.vx*=-1; e.facingRight=e.vx>0;
                 if(Math.abs(player.x-e.x)<GW/2+50){
-                    if(e.reactT>0)e.reactT--; else{ e.shootT--; if(e.shootT<=0){ playNoise(0.1,600,0.1); bullets.push({x:e.x,y:e.y+25,vx:player.x>e.x?6:-6,vy:0,player:false,active:true,type:'normal'}); e.shootT=80+Math.random()*60; } }
+                    if(e.reactT>0)e.reactT--; else{ e.shootT--; if(e.shootT<=0){ 
+                        playNoise(0.1,600,0.1); 
+                        bullets.push({x:e.x,y:e.y+25,vx:player.x>e.x?6:-6,vy:0,player:false,active:true,type:'normal'}); 
+                        lights.push({x:e.x, y:e.y+25, size:80, intensity:0.5, color:'rgba(255,255,0,0.3)', life:3});
+                        e.shootT=80+Math.random()*60; 
+                    } }
                 }
             });
             if(boss&&boss.active){
@@ -437,13 +376,18 @@
 
             bullets.forEach(b=>{
                 if(!b.active) return;
-                if(b.type==='rocket'){ b.vx*=1.05; particles.push({x:b.x,y:b.y,vx:0,vy:0,life:10,type:'smoke',size:5}); }
+                if(b.type==='rocket'){ b.vx*=1.05; particles.push({x:b.x,y:b.y,vx:0,vy:0,life:10,type:'smoke',size:5, color:'#aaa'}); }
                 if(b.type==='grenade'){ b.vy+=0.5; }
                 b.x+=b.vx; b.y+=b.vy;
                 if(b.type==='grenade'&&b.y>400){ b.active=false; spawnExplosion(b.x,b.y,80); }
                 if(Math.abs(b.x-cameraX)>GW)b.active=false;
                 if(b.player){
-                    enemies.forEach(e=>{ if(e.active&&Math.abs(b.x-e.x)<20&&Math.abs(b.y-e.y)<30){ if(b.type==='rocket'||b.type==='grenade'){b.active=false;spawnExplosion(b.x,b.y,80);} else{e.hp--;b.active=false;spawnBlood(e.x,e.y,5);if(e.hp<=0)killEnemy(e);} } });
+                    enemies.forEach(e=>{ 
+                        if(e.active && Math.abs(b.x-e.x)<35 && b.y > e.y-60 && b.y < e.y+10){ 
+                            if(b.type==='rocket'||b.type==='grenade'){b.active=false;spawnExplosion(b.x,b.y,80);} 
+                            else{e.hp--;b.active=false;spawnBlood(e.x,e.y,5);if(e.hp<=0)killEnemy(e);} 
+                        } 
+                    });
                     if(boss&&boss.active&&Math.abs(b.x-boss.x)<50&&Math.abs(b.y-boss.y)<50){ if(b.type==='rocket'||b.type==='grenade'){b.active=false;spawnExplosion(b.x,b.y,80);} else{boss.hp--;b.active=false;} }
                 } else { if(Math.abs(b.x-player.x)<15&&Math.abs(b.y-player.y)<27){ b.active=false; takeDamage(1); } }
             }); bullets=bullets.filter(b=>b.active);
@@ -459,6 +403,7 @@
                     if(d.y>420)d.grounded=true; 
                 } 
             });
+            lights.forEach(l=>{l.life--;}); lights=lights.filter(l=>l.life>0);
         }
 
         function draw() {
@@ -496,14 +441,24 @@
             if(boss && boss.active) drawSprite(boss.x, boss.y+40, 'boss', false, 'idle', frameCount);
             bullets.forEach(b => { if(b.type==='rocket') { ctx.fillStyle='#fff'; ctx.fillRect(b.x-5, b.y-3, 12, 6); } else if(b.type==='grenade') { ctx.fillStyle='#2ecc71'; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); } else { ctx.fillStyle=b.player?'#ff0':'#ff5500'; ctx.fillRect(b.x-5, b.y-2, 10, 4); } });
             particles.forEach(p => { 
-                if(p.type==='blood')ctx.fillStyle='#b00'; else if(p.type==='fire')ctx.fillStyle='#f39c12'; else if(p.type==='muzzle')ctx.fillStyle='#ffff88'; else ctx.fillStyle='#fff'; 
+                ctx.fillStyle=p.color; 
                 ctx.fillRect(p.x, p.y, p.size||4, p.size||4); 
             });
+            
+            // LIGHTING PASS
+            ctx.globalCompositeOperation = 'lighter';
+            lights.forEach(l => {
+                let grad = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.size);
+                grad.addColorStop(0, l.color);
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(l.x, l.y, l.size, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.globalCompositeOperation = 'source-over';
 
             ctx.restore();
         }
 
-        // HIGH QUALITY SPRITES
         function drawSprite(x,y,t,r,s,f) {
             ctx.save(); ctx.translate(Math.floor(x),Math.floor(y)); if(!r)ctx.scale(-1,1);
             if(t==='player'){ 
