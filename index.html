@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: ULTIMATE</title>
+    <title>URBAN WARFARE: DEFINITIVE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@700&display=swap');
         
@@ -16,7 +16,6 @@
             font-family: 'Rajdhani', sans-serif;
         }
 
-        /* CONSOLE */
         #console-body {
             display: flex; flex-direction: row; width: 100%; height: 100%;
             align-items: stretch; background: #111;
@@ -99,7 +98,7 @@
             pointer-events: none; z-index: 11;
         }
 
-        /* HUD */
+        /* UI */
         #ui-layer {
             position: absolute; top: 15px; left: 20px; width: calc(100% - 40px); pointer-events: none;
             display: none; justify-content: space-between; align-items: flex-start;
@@ -108,27 +107,10 @@
         #hp-bar { display: flex; gap: 4px; margin-bottom: 5px; }
         .heart { width: 16px; height: 16px; background: #c0392b; border: 2px solid #fff; transform: skewX(-15deg); }
 
-        /* BIOS SCREEN */
-        #bios-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 99999;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-        }
-        #bios-logo {
-            width: 100px; height: 100px; background: linear-gradient(135deg, #f1c40f, #e67e22);
-            transform: rotate(45deg); box-shadow: 0 0 50px #e67e22;
-            opacity: 0; animation: logoFadeIn 4s forwards;
-        }
-        #bios-text {
-            margin-top: 60px; font-family: 'Rajdhani'; font-weight: 900; font-size: 40px; letter-spacing: 5px;
-            background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; color: transparent;
-            opacity: 0; animation: textFadeIn 4s forwards 0.5s;
-        }
-
-        /* OVERLAYS */
+        /* SCREENS */
         #ui-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100000; background: #080808; display: flex; flex-direction: column;
+            z-index: 99999; background: #080808; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
         }
         #boot-btn, .menu-btn {
@@ -143,7 +125,22 @@
             padding: 5px 10px; font-size: 8px; z-index: 10000; cursor: pointer;
         }
 
-        /* GAME SCREENS */
+        #bios-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 30000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #bios-logo {
+            width: 100px; height: 100px; background: linear-gradient(135deg, #f1c40f, #e67e22);
+            transform: rotate(45deg); box-shadow: 0 0 50px #e67e22;
+            opacity: 0; animation: logoFadeIn 4s forwards;
+        }
+        #bios-text {
+            margin-top: 60px; font-family: 'Rajdhani'; font-weight: 900; font-size: 40px; letter-spacing: 5px;
+            background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; color: transparent;
+            opacity: 0; animation: textFadeIn 4s forwards 0.5s;
+        }
+
         #splash-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;
             display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
@@ -186,7 +183,7 @@
 <body>
 
 <div id="ui-overlay">
-    <div style="margin-bottom: 20px; font-size: 14px; color: #666; font-family: monospace;">TACTICAL OS V.3.2</div>
+    <div style="margin-bottom: 20px; font-size: 14px; color: #666; font-family: monospace;">TACTICAL OS V.3.3 (PATCHED)</div>
     <button id="boot-btn" onclick="bootSystem()">POWER ON</button>
 </div>
 
@@ -282,7 +279,7 @@
         toggleFull(); 
         document.getElementById('ui-overlay').style.display = 'none'; 
         
-        // --- RESTORED BIOS SCREEN LOGIC ---
+        // BIOS SEQUENCE
         const bios = document.getElementById('bios-screen');
         bios.style.display = 'flex';
         
@@ -291,7 +288,7 @@
             actx = new AudioContext();
             if(actx.state === 'suspended') actx.resume();
 
-            // BIOS SOUND: SAWTOOTH DRONE
+            // BIOS SOUND
             const osc1 = actx.createOscillator();
             const g1 = actx.createGain();
             osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(50, actx.currentTime);
@@ -303,7 +300,7 @@
         } catch(e) { console.log("Audio Blocked"); }
 
         setTimeout(() => {
-            bios.style.display = 'none'; // Hide bios after 4s
+            bios.style.display = 'none';
             initGameSystem();
         }, 4000);
     }
@@ -367,6 +364,7 @@
         player = new Player(); 
         generateLevel(1); 
         isGameRunning = true; 
+        startMusic(0); 
     }
 
     function fullRestart() {
@@ -374,34 +372,33 @@
         startGame();
     }
 
+    // --- GAME LOGIC ---
     class Player {
+        // NOTE: y is FEET position
         constructor() { this.x=100; this.y=400; this.w=20; this.h=60; this.vx=0; this.vy=0; this.grounded=false; this.faceR=true; this.weapon='normal'; this.shootT=0; this.invul=0; this.state='idle'; this.hp=3; this.grenades=3; }
         update() {
             if(isTransitioning) {
                 this.vx=4; this.faceR=true; this.state='run'; this.x+=this.vx; this.y+=this.vy; this.vy+=0.6; this.grounded=false;
-                platforms.forEach(p=>{ if(this.x<p.x+p.w && this.x+this.w>p.x && this.y+this.h>p.y && this.y+this.h<p.y+p.h+20 && this.vy>=0){ this.y=p.y-this.h; this.vy=0; this.grounded=true; } });
+                platforms.forEach(p=>{ if(this.x<p.x+p.w && this.x+this.w>p.x && this.y+this.h>p.y && this.y+this.h<p.y+p.h+20 && this.vy>=0){ this.y=p.y; this.vy=0; this.grounded=true; } });
                 return; 
             }
-            if(keys.ArrowRight){this.vx=4; this.faceR=true; this.state='run';} 
-            else if(keys.ArrowLeft){this.vx=-4; this.faceR=false; this.state='run';} 
-            else {this.vx*=0.8; this.state='idle';}
-            
+            if(keys.ArrowRight){this.vx=4; this.faceR=true; this.state='run';} else if(keys.ArrowLeft){this.vx=-4; this.faceR=false; this.state='run';} else{this.vx*=0.8; this.state='idle';}
             if(keys.z && this.grounded){this.vy=-14; this.grounded=false; playNoise(0.1,100,0.1);}
             if(!this.grounded) this.state='jump';
-            
-            if(this.shootT > 0) player.shootT--;
-            if(keys.x && player.shootT<=0) {
-                player.shootT = 12; shake=5; this.vx += this.faceR ? -1 : 1; 
+            if(this.shootT>0) this.shootT--;
+            if(keys.x && this.shootT<=0) {
+                this.shootT = 12; shake=5; this.vx += this.faceR ? -1 : 1; 
                 playGunShot(); 
-                bullets.push({x:this.x+(this.faceR?50:-20), y:this.y+20, vx:this.faceR?16:-16, vy:0, player:true, active:true, type:'normal'});
-                for(let i=0; i<5; i++) particles.push({x:this.x+(this.faceR?50:-20), y:this.y+20, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:5, color:'#ffaa00'});
-                spawnShell(this.x, this.y+20, this.faceR);
+                bullets.push({x:this.x+(this.faceR?50:-20), y:this.y-35, vx:this.faceR?16:-16, vy:0, player:true, active:true, type:'normal'});
+                for(let i=0; i<8; i++) particles.push({x:this.x+(this.faceR?50:-20), y:this.y-35, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:5, color:'#ffaa00'});
+                spawnShell(this.x, this.y-35, this.faceR);
             }
-            if(keys.c && !cPressed && this.grenades>0) { cPressed=true; this.grenades--; bullets.push({x:this.x, y:this.y+20, vx:this.faceR?8:-8, vy:-10, player:true, active:true, type:'grenade'}); playNoise(0.1,400,0.2); }
+            if(keys.c && !cPressed && this.grenades>0) { cPressed=true; this.grenades--; bullets.push({x:this.x, y:this.y-35, vx:this.faceR?8:-8, vy:-10, player:true, active:true, type:'grenade'}); playNoise(0.1,400,0.2); }
 
             this.vy+=0.6; this.x+=this.vx; this.y+=this.vy;
             this.grounded=false;
-            platforms.forEach(p=>{ if(this.x<p.x+p.w && this.x+this.w>p.x && this.y+this.h>p.y && this.y+this.h<p.y+p.h+25 && this.vy>=0){ this.y=p.y-this.h; this.vy=0; this.grounded=true; } });
+            // FEET COLLISION: Checks if feet (y) go through platform surface (p.y)
+            platforms.forEach(p=>{ if(this.x<p.x+p.w && this.x+this.w>p.x && this.y >= p.y && this.y < p.y+25 && this.vy >= 0){ this.y=p.y; this.vy=0; this.grounded=true; } });
             
             if(this.y>GH+100) takeDamage(3);
             if(this.x<cameraX+10) this.x=cameraX+10;
@@ -420,17 +417,24 @@
 
         let cy=580, cx=0;
         platforms.push({x:cx,y:cy,w:800,h:100}); cx+=800;
-        let len = 3000 + (lvl*500);
         
-        while(cx < len) {
-            let gap=50+Math.random()*100, w=300+Math.random()*200, h=Math.min(Math.max(cy+(Math.random()*120)-60, 300), 580);
-            if(Math.random()>0.7) gap=150;
-            cy=h; platforms.push({x:cx+gap, y:h, w:w, h:100});
-            let eCount = 1 + Math.floor(Math.random() * 2); 
-            for(let e=0; e<eCount; e++) enemies.push({x:cx+gap+50+Math.random()*(w-100), y:h, hp:3, shootT:0, reactT:40, active:true, vx:1, minX:cx+gap, maxX:cx+gap+w, facingRight:true, hitFlash:0});
-            cx+=gap+w;
+        if(lvl%3===0) {
+            platforms.push({x:0, y:580, w:1600, h:100}); 
+            boss={x:700, y:580, hp:50+(lvl*15), maxHp:50+(lvl*15), active:true, startX:700, timer:0};
+        } else {
+            let len = 3000 + (lvl*500);
+            while(cx < len) {
+                let gap=50+Math.random()*100, w=300+Math.random()*200, h=Math.min(Math.max(cy+(Math.random()*120)-60, 300), 580);
+                if(Math.random()>0.7) gap=150;
+                cy=h; platforms.push({x:cx+gap, y:h, w:w, h:100});
+                
+                let eCount = 2 + Math.floor(Math.random() * 3); 
+                // ENEMY SPAWN: ON FLOOR
+                for(let e=0; e<eCount; e++) enemies.push({x:cx+gap+50+Math.random()*(w-100), y:h, hp:3, shootT:0, reactT:40, active:true, vx:1, minX:cx+gap, maxX:cx+gap+w, facingRight:true, hitFlash:0});
+                cx+=gap+w;
+            }
+            platforms.push({x:cx+100,y:580,w:600,h:100}); goal={x:cx+350,y:580};
         }
-        platforms.push({x:cx+100,y:580,w:600,h:100}); goal={x:cx+350,y:500};
     }
 
     function update() {
@@ -440,7 +444,7 @@
 
         player.update();
         if(isTransitioning) {
-            if(player.x > cameraX+GW+50) { isTransitioning=false; level++; if(level>20)fullRestart(); else { player=new Player(); generateLevel(level); } }
+            if(player.x > cameraX+GW+50) { isTransitioning=false; level++; if(level>20)fullRestart(); else { player=new Player(); generateLevel(level); startMusic(0); } }
         } else {
             document.getElementById('livesDisplay').innerText='x'+lives; 
             document.getElementById('scoreDisplay').innerText=score.toString().padStart(6,'0');
@@ -451,7 +455,7 @@
                 e.x+=e.vx; if(e.x<e.minX||e.x>e.maxX)e.vx*=-1; e.facingRight=e.vx>0;
                 if(Math.abs(player.x-e.x)<600 && Math.random()<0.02) {
                     playNoise(0.1,600,0.1); 
-                    bullets.push({x:e.x,y:e.y+20,vx:player.x>e.x?8:-8,vy:0,player:false,active:true});
+                    bullets.push({x:e.x,y:e.y-40,vx:player.x>e.x?8:-8,vy:0,player:false,active:true});
                 }
             });
 
@@ -463,14 +467,14 @@
 
                 if(b.player) {
                     enemies.forEach(e=>{
-                        if(e.active && b.x > e.x-20 && b.x < e.x+20 && b.y > e.y && b.y < e.y+60) {
+                        if(e.active && b.x > e.x-20 && b.x < e.x+20 && b.y > e.y-60 && b.y < e.y) {
                             e.hp--; e.hitFlash=5; b.active=false; 
                             spawnBlood(e.x, b.y);
-                            if(e.hp<=0) { e.active=false; score+=100; spawnExplosion(e.x, e.y+30); }
+                            if(e.hp<=0) { e.active=false; score+=100; spawnExplosion(e.x, e.y-30); }
                         }
                     });
                 } else {
-                    if(Math.abs(b.x-player.x)<20 && Math.abs(b.y-(player.y+30))<30) takeDamage(1);
+                    if(Math.abs(b.x-player.x)<20 && Math.abs(b.y-(player.y-30))<30) takeDamage(1);
                 }
             }); bullets=bullets.filter(b=>b.active);
 
@@ -520,7 +524,7 @@
         ctx.restore();
     }
 
-    // --- RESTORED SPRITE RENDERER ---
+    // --- SPRITE RENDERER (FEET AT Y=0, DRAW UP) ---
     function drawSprite(x,y,t,r,s,f) {
         ctx.save(); 
         ctx.translate(Math.floor(x), Math.floor(y)); 
@@ -561,10 +565,9 @@
     function spawnShell(x,y,r) { debris.push({x:x,y:y,vx:r?-2:2,vy:-4,angle:0}); }
     function takeDamage(n) { if(player.invul>0)return; player.hp-=n; player.invul=50; spawnBlood(player.x,player.y-30); if(player.hp<=0) die(); }
     function die() { lives--; if(lives<=0){ isGameRunning=false; document.getElementById('game-over-screen').style.display='flex'; } else { player.x=cameraX+100; player.y=100; player.vy=0; player.hp=3; } }
-    
-    // RESTORED COMPLEX AUDIO
     function playGunShot(){ try{ if(!actx)return; const o=actx.createOscillator(); const g=actx.createGain(); o.type='square'; o.frequency.value=100; g.gain.value=0.1; g.gain.exponentialRampToValueAtTime(0.01,actx.currentTime+0.1); o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+0.1); }catch(e){} }
     function playNoise(){ try{ if(!actx)return; const s=actx.createBufferSource(); s.buffer=noiseBuffer; const g=actx.createGain(); g.gain.value=0.1; g.gain.exponentialRampToValueAtTime(0.01,actx.currentTime+0.1); s.connect(g); g.connect(actx.destination); s.start(); s.stop(actx.currentTime+0.1); }catch(e){} }
+    function startMusic(idx) { if(musicInterval) clearInterval(musicInterval); musicInterval = setInterval(() => { if(!isGameRunning) return; try{ let freq = MUSIC_TRACKS[0][currentNote % 8]; if(freq > 0) playSynth(freq, 'sawtooth', 0.1, 0.05); if(currentNote % 4 === 0) playNoise(0.05, 100, 0.2); currentNote++; }catch(e){} }, 150); }
 
     function loop() {
         if(isGameRunning || document.getElementById('game-over-screen').style.display==='flex') {
