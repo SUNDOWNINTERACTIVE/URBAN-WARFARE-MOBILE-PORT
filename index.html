@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: STORM</title>
+    <title>URBAN WARFARE: TACTICAL OPS</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Press+Start+2P&family=Rajdhani:wght@600&display=swap');
         
@@ -372,7 +372,7 @@
                     else { gap=50; w=150; h=Math.min(Math.max(cy+(Math.random()*100)-50, 200), 380); }
                     cy=h; platforms.push({x:cx+gap, y:h, w:w, h:70});
                     if(Math.random()>0.6) hazards.push({x:cx+gap+Math.random()*w, y:h, type:'mine', active:true});
-                    let eCount = 2 + Math.floor(Math.random() * 3); // More Enemies
+                    let eCount = 2 + Math.floor(Math.random() * 3); 
                     for(let e=0; e<eCount; e++) enemies.push({x:cx+gap+50+Math.random()*(w-100), y:h, hp:3, shootT:0, reactT:40, active:true, vx:1, minX:cx+gap, maxX:cx+gap+w, facingRight:true, hitFlash:0});
                     if(Math.random()>0.85) powerups.push({x:cx+gap+w/2, y:h-30, type:(Math.random()<0.3?'G':(Math.random()<0.6?'L':'S')), active:true});
                     cx+=gap+w;
@@ -413,7 +413,6 @@
             document.getElementById('game-over-screen').style.display = 'none';
             level = 1; score = 0; lives = 3; cameraX = 0;
             isTransitioning = false;
-            // HARD RESET ALL ENTITIES
             bullets=[]; particles=[]; debris=[]; enemies=[];
             player = new Player();
             generateLevel(level);
@@ -436,7 +435,6 @@
             if(!isGameRunning || !player) return; if(shake>0) shake--;
             const bIndex = getBiomeIndex(level);
             
-            // WIND & PARTICLES
             let windStrength = Math.sin(frameCount * 0.01) * 2;
             if(frameCount % 4 === 0) {
                 let color = (bIndex===0) ? '#2ecc71' : (bIndex===1 ? '#e74c3c' : '#3498db');
@@ -490,7 +488,6 @@
                     if(boss.hp<=0){ spawnExplosion(boss.x,boss.y,200); boss.active=false; score+=5000; setTimeout(startNextLevel,3000); }
                 }
                 
-                // TRIGGER VICTORY WALK
                 if(goal && player.x > goal.x && !isTransitioning) {
                     isTransitioning = true;
                 }
@@ -505,7 +502,6 @@
                 if(Math.abs(b.x-cameraX)>GW)b.active=false;
                 if(b.player){
                     enemies.forEach(e=>{ 
-                        // FIXED HITBOX LOGIC
                         if(e.active && Math.abs(b.x - e.x) < 30 && b.y < e.y && b.y > e.y - 60){ 
                             if(b.type==='rocket'||b.type==='grenade'){b.active=false;spawnExplosion(b.x,b.y,80);} 
                             else{
@@ -593,27 +589,96 @@
             ctx.restore();
         }
 
+        // MODERN SPRITES
         function drawSprite(x,y,t,r,s,f) {
             ctx.save(); ctx.translate(Math.floor(x),Math.floor(y)); if(!r)ctx.scale(-1,1);
+            
             if(t==='player'){ 
-                let lo = (s==='run')?Math.sin(f*0.4)*10:0; ctx.translate(0, -28 - ((s==='run')?Math.abs(Math.cos(f*0.4))*2:0));
-                ctx.fillStyle='#2e332a'; ctx.beginPath(); ctx.moveTo(-2,10); ctx.lineTo(-4+lo,20); ctx.lineTo(-2+lo,28); ctx.lineTo(2,28); ctx.lineTo(3,10); ctx.fill(); ctx.fillStyle='#111'; ctx.fillRect(s==='jump'?-8:(-3+lo), 28, 6, 4);
-                ctx.fillStyle='#4b5742'; ctx.beginPath(); ctx.moveTo(2,10); ctx.lineTo(4-lo,20); ctx.lineTo(6-lo,28); ctx.lineTo(1,28); ctx.lineTo(-2,10); ctx.fill(); ctx.fillStyle='#111'; ctx.fillRect(s==='jump'?4:(1-lo), 28, 6, 4);
-                ctx.fillStyle='#dcb083'; ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#111'; ctx.beginPath(); ctx.moveTo(-6,-10); ctx.lineTo(6,-10); ctx.lineTo(4,5); ctx.lineTo(-4,5); ctx.fill();
-                ctx.fillStyle='#dcb083'; ctx.beginPath(); ctx.arc(0,-14,6,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#e74c3c'; ctx.fillRect(-6,-18,12,4); ctx.beginPath(); ctx.moveTo(-6,-16); ctx.lineTo(-12,-14-Math.sin(f*0.2)*3); ctx.lineTo(-12,-18); ctx.fill();
-                ctx.fillStyle='#dcb083'; ctx.fillRect(0,-8,12,4); ctx.fillRect(10,-6,4,4);
-                ctx.fillStyle='#222'; ctx.fillRect(8,-8,22,5); ctx.fillStyle='#000'; ctx.fillRect(16,-3,5,5);
-            } else if (t==='enemy') { 
-                let lo = Math.sin(f*0.4)*10; ctx.translate(0, -28 - Math.abs(Math.cos(f*0.4))*2);
-                ctx.fillStyle='#2c3e50'; ctx.beginPath(); ctx.moveTo(-2,10); ctx.lineTo(-4+lo,20); ctx.lineTo(-2+lo,28); ctx.lineTo(2,28); ctx.lineTo(3,10); ctx.fill(); ctx.fillStyle='#000'; ctx.fillRect(-3+lo, 28, 6, 4);
-                ctx.fillStyle='#34495e'; ctx.beginPath(); ctx.moveTo(2,10); ctx.lineTo(4-lo,20); ctx.lineTo(6-lo,28); ctx.lineTo(1,28); ctx.lineTo(-2,10); ctx.fill(); ctx.fillStyle='#000'; ctx.fillRect(1-lo, 28, 6, 4);
-                ctx.fillStyle='#34495e'; ctx.fillRect(-6,-10,12,20); ctx.fillStyle='#111'; ctx.beginPath(); ctx.moveTo(-6,-10); ctx.lineTo(6,-10); ctx.lineTo(4,5); ctx.lineTo(-4,5); ctx.fill(); ctx.fillStyle='#555'; ctx.fillRect(-5,-6,4,6);
-                ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(0,-14,7,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#e74c3c'; ctx.fillRect(0,-16,6,4);
-                ctx.fillStyle='#2c3e50'; ctx.fillRect(0,-8,12,4); ctx.fillStyle='#111'; ctx.fillRect(10,-6,4,4);
-                ctx.fillStyle='#000'; ctx.fillRect(8,-8,22,5); ctx.fillStyle='#333'; ctx.fillRect(16,-3,5,5);
-            } else if (t==='boss') {
+                // MODERN SWAT LOOK
+                let lo = (s==='run')?Math.sin(f*0.4)*3:0; 
+                let go = (s==='run')?Math.cos(f*0.4)*2:0;
+                ctx.translate(0, -50 + lo); // Adjust Y for taller sprite
+
+                // Legs
+                ctx.fillStyle='#111'; // Dark pants
+                ctx.fillRect(-8, 35, 8, 15); // Back leg
+                ctx.fillStyle='#222'; 
+                ctx.fillRect(2, 35, 8, 15); // Front leg
+                
+                // Boots
+                ctx.fillStyle='#000';
+                ctx.fillRect(-10, 48, 10, 4);
+                ctx.fillRect(0, 48, 10, 4);
+
+                // Torso (Vest)
+                ctx.fillStyle='#1a1a1a'; // Dark armor
+                ctx.fillRect(-10, 15, 20, 20); 
+                // Vest Detail (Pouches)
+                ctx.fillStyle='#333'; 
+                ctx.fillRect(-8, 25, 6, 8);
+                ctx.fillRect(2, 25, 6, 8);
+
+                // Arms
+                ctx.fillStyle='#222';
+                ctx.fillRect(5, 18, 12, 6); // Front arm holding gun
+
+                // Head (Helmet)
+                ctx.fillStyle='#2c3e50'; // Helmet Color
+                ctx.beginPath(); ctx.arc(0, 10, 10, Math.PI, 0); ctx.lineTo(10,18); ctx.lineTo(-10,18); ctx.fill();
+                
+                // NVG Goggles (Glowing)
+                ctx.fillStyle='#00ff00';
+                ctx.shadowColor='#00ff00'; ctx.shadowBlur=10;
+                ctx.fillRect(4, 8, 6, 4);
+                ctx.shadowBlur=0;
+
+                // Gun (Carbine)
+                ctx.fillStyle='#000';
+                ctx.fillRect(10, 20+go, 25, 6); // Barrel
+                ctx.fillRect(15, 26+go, 4, 8); // Mag
+                ctx.fillRect(5, 22+go, 8, 4); // Stock
+            } 
+            else if (t==='enemy') { 
+                // MODERN MERCENARY
+                let lo = Math.sin(f*0.4)*3;
+                ctx.translate(0, -50 + Math.abs(Math.cos(f*0.4)));
+
+                // Legs (Camo Grey)
+                ctx.fillStyle='#555'; 
+                ctx.fillRect(-8, 35, 8, 15);
+                ctx.fillStyle='#666'; 
+                ctx.fillRect(2, 35, 8, 15);
+
+                // Torso (Tac Rig)
+                ctx.fillStyle='#333'; // Vest
+                ctx.fillRect(-10, 15, 20, 20);
+                // Shirt sleeves
+                ctx.fillStyle='#555';
+                ctx.fillRect(5, 18, 10, 6);
+
+                // Head (Bandana/Beret)
+                ctx.fillStyle='#dcb083'; // Skin
+                ctx.fillRect(-7, 5, 14, 12);
+                ctx.fillStyle='#c0392b'; // Red Beret
+                ctx.beginPath(); ctx.moveTo(-8,6); ctx.lineTo(10,4); ctx.lineTo(12,10); ctx.lineTo(-8,10); ctx.fill();
+
+                // Eyes (Visor)
+                ctx.fillStyle='#111';
+                ctx.fillRect(2, 8, 8, 3);
+
+                // Gun (AK Style)
+                ctx.fillStyle='#222';
+                ctx.fillRect(10, 22, 22, 5); // Barrel
+                ctx.fillStyle='#3e2723'; // Wood stock
+                ctx.fillRect(5, 23, 6, 4); 
+                // Curved Mag
+                ctx.fillStyle='#000';
+                ctx.beginPath(); ctx.moveTo(18,27); ctx.quadraticCurveTo(15,35, 12, 32); ctx.lineTo(15,27); ctx.fill();
+            } 
+            else if (t==='boss') {
                 ctx.translate(0,-50); ctx.fillStyle='#111'; ctx.fillRect(-40,0,20,50); ctx.fillRect(20,0,20,50); ctx.fillStyle='#333'; ctx.fillRect(-50,-50,100,60); ctx.fillStyle='#f00'; ctx.fillRect(-20,-30,40,20);
-            } else if (t==='chopper') {
+            } 
+            else if (t==='chopper') {
                 ctx.translate(0,-40); ctx.fillStyle='#000'; ctx.fillRect(-80,-25,160,4); ctx.fillStyle='#444'; ctx.beginPath(); ctx.ellipse(0,0,60,30,0,0,Math.PI*2); ctx.fill();
             }
             ctx.restore();
