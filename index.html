@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: ELITE</title>
+    <title>URBAN WARFARE: BIOS EDITION</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Press+Start+2P&family=Rajdhani:wght@700&display=swap');
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none; -webkit-user-select: none; }
 
@@ -113,7 +113,7 @@
         #hp-bar { display: flex; gap: 4px; margin-bottom: 5px; }
         .heart { width: 16px; height: 16px; background: #c0392b; border: 2px solid #fff; transform: skewX(-15deg); }
 
-        /* SCREENS */
+        /* SCREENS & BIOS */
         #ui-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999; background: #080808; display: flex; flex-direction: column;
@@ -132,9 +132,26 @@
             padding: 5px 10px; font-size: 8px; z-index: 10000; cursor: pointer;
         }
 
+        /* BOOT SEQUENCE ANIMATION */
+        #bios-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 300;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #bios-logo {
+            width: 80px; height: 80px; background: linear-gradient(135deg, #f1c40f, #e67e22);
+            transform: rotate(45deg); box-shadow: 0 0 30px #e67e22;
+            opacity: 0; animation: logoFadeIn 4s forwards;
+        }
+        #bios-text {
+            margin-top: 60px; font-family: 'Rajdhani'; font-weight: 900; font-size: 30px; letter-spacing: 5px;
+            background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; color: transparent;
+            opacity: 0; animation: textFadeIn 4s forwards 0.5s;
+        }
+
         #splash-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
             animation: fadeOutSplash 4s forwards;
         }
         #splash-text { color: #fff; font-family: 'Black Ops One'; font-size: 30px; text-align: center; opacity: 0; animation: fadeInOutText 3s ease-in-out; }
@@ -166,6 +183,8 @@
         @keyframes blink { 50% { opacity: 0; } }
         @keyframes fadeInOutText { 0%, 100% { opacity: 0; } 20%, 80% { opacity: 1; } }
         @keyframes fadeOutSplash { 90% { opacity: 1; pointer-events: all; } 100% { opacity: 0; pointer-events: none; } }
+        @keyframes logoFadeIn { 0% { opacity: 0; transform: rotate(0deg) scale(0.5); } 20% { opacity: 1; transform: rotate(45deg) scale(1); } 80% { opacity: 1; transform: rotate(45deg) scale(1); } 100% { opacity: 0; transform: rotate(90deg) scale(1.2); } }
+        @keyframes textFadeIn { 0% { opacity: 0; letter-spacing: 20px; } 20% { opacity: 1; letter-spacing: 5px; } 80% { opacity: 1; } 100% { opacity: 0; } }
         @keyframes slideInLeft { from { transform: translateX(-200px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(200px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
@@ -173,8 +192,8 @@
 <body>
 
 <div id="ui-overlay">
-    <div style="margin-bottom: 20px; font-size: 14px; color: #666; font-family: monospace;">TACTICAL OS V.1.4</div>
-    <button id="boot-btn" onclick="bootSystem()">BOOT SYSTEM</button>
+    <div style="margin-bottom: 20px; font-size: 14px; color: #666; font-family: monospace;">TACTICAL OS V.2.0</div>
+    <button id="boot-btn" onclick="bootSystem()">POWER ON</button>
 </div>
 
 <button id="fs-toggle" onclick="toggleFull()">FULLSCREEN</button>
@@ -197,6 +216,11 @@
         <div id="scanlines"></div>
         <div id="vignette"></div>
         
+        <div id="bios-screen">
+            <div id="bios-logo"></div>
+            <div id="bios-text">SUNDOWN<br>VIRTUAL CONSOLE</div>
+        </div>
+
         <div id="mission-overlay">
             <div id="mission-title">MISSION 01</div>
             <div id="mission-sub">SECTOR: JUNGLE</div>
@@ -240,7 +264,44 @@
 
 <script>
     function toggleFull() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => { console.log(e); }); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
-    function bootSystem() { toggleFull(); document.getElementById('ui-overlay').style.display = 'none'; initGame(); }
+    
+    function bootSystem() { 
+        toggleFull(); 
+        document.getElementById('ui-overlay').style.display = 'none'; 
+        
+        // BIOS SEQUENCE
+        const bios = document.getElementById('bios-screen');
+        bios.style.display = 'flex';
+        
+        // BIOS AUDIO (Simulated PS1 Boot)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const actx = new AudioContext();
+        
+        // Deep Drone
+        const osc1 = actx.createOscillator();
+        const g1 = actx.createGain();
+        osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(50, actx.currentTime);
+        g1.gain.setValueAtTime(0, actx.currentTime);
+        g1.gain.linearRampToValueAtTime(0.4, actx.currentTime + 1);
+        g1.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 4);
+        osc1.connect(g1); g1.connect(actx.destination);
+        osc1.start(); osc1.stop(actx.currentTime + 4);
+
+        // Twinkle
+        const osc2 = actx.createOscillator();
+        const g2 = actx.createGain();
+        osc2.type = 'sine'; osc2.frequency.setValueAtTime(800, actx.currentTime);
+        g2.gain.setValueAtTime(0, actx.currentTime);
+        g2.gain.linearRampToValueAtTime(0.2, actx.currentTime + 0.5);
+        g2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 3);
+        osc2.connect(g2); g2.connect(actx.destination);
+        osc2.start(); osc2.stop(actx.currentTime + 3);
+
+        setTimeout(() => {
+            bios.style.display = 'none';
+            initGame();
+        }, 4000);
+    }
 
     let isGameRunning = false;
     let isTransitioning = false;
@@ -248,7 +309,13 @@
 
     function initGame() {
         const title = document.getElementById('title-screen');
-        setTimeout(() => { title.style.display = 'flex'; void title.offsetWidth; title.style.opacity = '1'; }, 3500);
+        const splash = document.getElementById('splash-screen');
+        splash.style.display = 'flex';
+        
+        setTimeout(() => { 
+            splash.style.display = 'none';
+            title.style.display = 'flex'; void title.offsetWidth; title.style.opacity = '1'; 
+        }, 3500);
 
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let actx, noiseBuffer, musicInterval = null, musicEnabled = true, currentNote = 0;
@@ -277,7 +344,6 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingEnabled = false;
-        // INCREASED RESOLUTION FOR BETTER SPRITES
         const GW=960; const GH=640; 
         let level=1; let score=0; let lives=3; let frameCount=0; let cameraX=0; let shake=0;
         const keys={ArrowLeft:false,ArrowRight:false,ArrowUp:false,ArrowDown:false,z:false,x:false,c:false};
@@ -310,7 +376,7 @@
         function getBiomeIndex(lvl) { if(lvl<=3)return 0; if(lvl<=6)return 1; return 2; }
 
         class Player {
-            constructor() { this.x=100; this.y=400; this.w=30; this.h=70; this.vx=0; this.vy=0; this.grounded=false; this.faceR=true; this.weapon='normal'; this.shootT=0; this.invul=0; this.state='idle'; this.hp=3; this.grenades=3; }
+            constructor() { this.x=100; this.y=400; this.w=30; this.h=60; this.vx=0; this.vy=0; this.grounded=false; this.faceR=true; this.weapon='normal'; this.shootT=0; this.invul=0; this.state='idle'; this.hp=3; this.grenades=3; }
             update() {
                 if(isTransitioning) {
                     this.vx = 4; this.faceR = true; this.state = 'run'; this.x += this.vx; this.y += this.vy; this.vy += 0.5; this.grounded=false;
@@ -335,13 +401,13 @@
                 let speed = this.faceR?16:-16; let type = this.weapon==='rocket'?'rocket':'normal';
                 shake = 5; this.vx += this.faceR ? -1 : 1; 
                 if(type==='rocket') { speed=this.faceR?5:-5; playNoise(0.5,100,0.4); } else { playGunShot(); } 
-                bullets.push({x:this.x+(this.faceR?50:-20), y:this.y-35, vx:speed, vy:0, player:true, active:true, type:type});
-                if(this.weapon==='spread'){ bullets.push({x:this.x,y:this.y-35,vx:speed,vy:-2,player:true,active:true,type:'normal'}); bullets.push({x:this.x,y:this.y-35,vx:speed,vy:2,player:true,active:true,type:'normal'}); }
-                for(let i=0; i<8; i++) particles.push({x:this.x+(this.faceR?50:-20), y:this.y-35, vx:(Math.random()-0.5)*2+(this.faceR?4:-4), vy:(Math.random()-0.5)*3, life:6, type:'flash', size:Math.random()*6, color:Math.random()>0.5?'#fff':'#f1c40f'});
-                lights.push({x:this.x+(this.faceR?50:-20), y:this.y-35, size:180, intensity:0.6, color:'rgba(255,200,100,0.4)', life:3});
-                spawnShell(this.x + (this.faceR?10:15), this.y-35, this.faceR);
+                bullets.push({x:this.x+(this.faceR?50:-20), y:this.y+20, vx:speed, vy:0, player:true, active:true, type:type});
+                if(this.weapon==='spread'){ bullets.push({x:this.x,y:this.y+20,vx:speed,vy:-2,player:true,active:true,type:'normal'}); bullets.push({x:this.x,y:this.y+20,vx:speed,vy:2,player:true,active:true,type:'normal'}); }
+                for(let i=0; i<8; i++) particles.push({x:this.x+(this.faceR?50:-20), y:this.y+20, vx:(Math.random()-0.5)*2+(this.faceR?4:-4), vy:(Math.random()-0.5)*3, life:6, type:'flash', size:Math.random()*6, color:Math.random()>0.5?'#fff':'#f1c40f'});
+                lights.push({x:this.x+(this.faceR?50:-20), y:this.y+20, size:180, intensity:0.6, color:'rgba(255,200,100,0.4)', life:3});
+                spawnShell(this.x + (this.faceR?10:15), this.y+20, this.faceR);
             }
-            throwGrenade() { this.grenades--; bullets.push({x:this.x, y:this.y-30, vx:this.faceR?8:-8, vy:-10, player:true, active:true, type:'grenade'}); playNoise(0.1,400,0.2); }
+            throwGrenade() { this.grenades--; bullets.push({x:this.x, y:this.y+20, vx:this.faceR?8:-8, vy:-10, player:true, active:true, type:'grenade'}); playNoise(0.1,400,0.2); }
         }
 
         function initBackground(lvl) {
@@ -531,158 +597,77 @@
             lights.forEach(l=>{l.life--;}); lights=lights.filter(l=>l.life>0);
         }
 
-        function draw() {
-            if(!isGameRunning && document.getElementById('game-over-screen').style.display !== 'flex') return;
-            const bIndex = getBiomeIndex(level); const t = BIOMES[bIndex];
-            let grd = ctx.createLinearGradient(0,0,0,GH); grd.addColorStop(0, t.skyTop); grd.addColorStop(1, t.skyBot); ctx.fillStyle = grd; ctx.fillRect(0,0,GW,GH);
-            ctx.save(); if(shake>0) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake); ctx.translate(-Math.floor(cameraX), 0);
-
-            bgElements.forEach(el => {
-                let dx = (el.x - cameraX * (el.layer+1)*0.15) % (GW*2); if(dx<-200) dx+=GW*2;
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                if(bIndex===0) { ctx.beginPath(); ctx.moveTo(dx, GH); ctx.lineTo(dx+el.size, GH-el.size*2); ctx.lineTo(dx+el.size*2, GH); ctx.fill(); }
-                else if(bIndex===1) { ctx.fillRect(dx, GH-el.size*3, el.size, el.size*3); }
-                else { ctx.fillRect(dx, 0, el.size/2, GH); }
-            });
-            bgParticles.forEach(p=>{
-                ctx.fillStyle=p.color;
-                if(p.type === 'wind') ctx.fillRect(p.x - cameraX, p.y, 100, 1);
-                else { ctx.beginPath(); ctx.arc(p.x - cameraX, p.y, p.size, 0, Math.PI*2); ctx.fill(); }
-            });
-
-            platforms.forEach(p => { 
-                // Platform Texture
-                ctx.fillStyle=t.plat; ctx.fillRect(p.x, p.y, p.w, p.h); 
-                ctx.fillStyle=t.detail; ctx.fillRect(p.x, p.y, p.w, 15);
-                ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(p.x, p.y+15, p.w, 5); 
-            });
-            hazards.forEach(h => { if(h.active) { ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(h.x, h.y, 10, Math.PI, 0); ctx.fill(); ctx.fillStyle=(frameCount%20<10)?'#f00':'#500'; ctx.fillRect(h.x-3, h.y-12, 6, 6); } });
-            bloodPools.forEach(pool => { ctx.fillStyle='#800000'; ctx.beginPath(); ctx.ellipse(pool.x, pool.y, pool.size, pool.size/4, 0, 0, Math.PI*2); ctx.fill(); });
-            
-            debris.forEach(d => { 
-                ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.angle); 
-                if(d.type==='shell') { ctx.fillStyle='#f1c40f'; ctx.fillRect(-3,-1.5,6,3); } 
-                else { ctx.fillStyle=(d.part==='head'?'#222':'#333'); ctx.fillRect(-d.w/2, -d.h/2, d.w, d.h); ctx.fillStyle='#b00'; ctx.fillRect(-d.w/2, -d.h/2, 6, 6); }
-                ctx.restore(); 
-            });
-
-            if(goal) drawSprite(goal.x, goal.y+50, 'chopper', true, 'idle', frameCount);
-            powerups.forEach(p => { if(p.active){ let dy=Math.sin(frameCount*0.1)*5; ctx.fillStyle=p.type==='L'?'#8e44ad':(p.type==='G'?'#2ecc71':'#e74c3c'); ctx.fillRect(p.x, p.y+dy, 30, 30); ctx.fillStyle='#fff'; ctx.font="14px Rajdhani"; ctx.fillText(p.type, p.x+10, p.y+dy+20); }});
-            
-            // Shadows
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            if(player) ctx.beginPath(), ctx.ellipse(player.x, player.y, 15, 5, 0, 0, Math.PI*2), ctx.fill();
-            enemies.forEach(e => { if(e.active) ctx.beginPath(), ctx.ellipse(e.x, e.y, 15, 5, 0, 0, Math.PI*2), ctx.fill(); });
-
-            if(player) {
-                enemies.forEach(e => { if(e.active) {
-                    if(e.hitFlash > 0) ctx.filter = 'brightness(200%)';
-                    drawSprite(e.x, e.y, 'enemy', e.vx>0, 'run', frameCount+e.x); 
-                    ctx.filter = 'none';
-                }});
-                if(player.invul%4<2) drawSprite(player.x, player.y, 'player', player.faceR, player.state, frameCount);
-            }
-            if(boss && boss.active) drawSprite(boss.x, boss.y+40, 'boss', false, 'idle', frameCount);
-            bullets.forEach(b => { if(b.type==='rocket') { ctx.fillStyle='#fff'; ctx.fillRect(b.x-5, b.y-3, 15, 8); } else if(b.type==='grenade') { ctx.fillStyle='#2ecc71'; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI*2); ctx.fill(); } else { ctx.fillStyle=b.player?'#ff0':'#ff5500'; ctx.fillRect(b.x-5, b.y-2, 12, 4); } });
-            particles.forEach(p => { 
-                ctx.fillStyle=p.color; 
-                ctx.fillRect(p.x, p.y, p.size||4, p.size||4); 
-            });
-            
-            ctx.globalCompositeOperation = 'lighter';
-            lights.forEach(l => {
-                let grad = ctx.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.size);
-                grad.addColorStop(0, l.color);
-                grad.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.arc(l.x, l.y, l.size, 0, Math.PI*2); ctx.fill();
-            });
-            ctx.globalCompositeOperation = 'source-over';
-
-            ctx.restore();
-        }
-
-        // --- NEW CHUNKY SPRITE RENDERER ---
         function drawSprite(x,y,t,r,s,f) {
             ctx.save(); 
-            ctx.translate(Math.floor(x), Math.floor(y)); 
+            ctx.translate(Math.floor(x), Math.floor(y + (t==='player'?player.h:player.h))); 
             if(!r) ctx.scale(-1,1);
 
             if(t==='player'){
                 let rc = (s==='run') ? Math.sin(f * 0.4) : 0;
                 let bob = (s==='idle') ? Math.sin(f * 0.1)*1 : 0;
                 
-                // --- LEGS ---
-                // Back Leg
+                // LEGS
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*-0.6); 
-                ctx.fillStyle='#2c3e50'; ctx.fillRect(-6,0,12,16); // Thigh
+                ctx.fillStyle='#2c3e50'; ctx.fillRect(-6,0,12,16); 
                 ctx.translate(0,14); ctx.rotate(rc>0?rc*0.8:0); 
-                ctx.fillStyle='#2c3e50'; ctx.fillRect(-5,0,10,14); // Shin
-                ctx.fillStyle='#000'; ctx.fillRect(-6,14,14,6); // Boot
+                ctx.fillStyle='#2c3e50'; ctx.fillRect(-5,0,10,14); 
+                ctx.fillStyle='#000'; ctx.fillRect(-6,14,14,6); 
                 ctx.restore();
 
-                // Front Leg
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); 
                 ctx.fillStyle='#34495e'; ctx.fillRect(-6,0,12,16); 
-                ctx.fillStyle='#111'; ctx.fillRect(-7,6,14,6); // Knee Pad
+                ctx.fillStyle='#111'; ctx.fillRect(-7,6,14,6); 
                 ctx.translate(0,14); ctx.rotate(rc<0?-rc*0.8:0); 
                 ctx.fillStyle='#34495e'; ctx.fillRect(-5,0,10,14); 
                 ctx.fillStyle='#000'; ctx.fillRect(-6,14,14,6); 
                 ctx.restore();
 
-                // --- TORSO ---
+                // TORSO
                 ctx.translate(0, -32+bob);
-                ctx.fillStyle='#1a1a1a'; ctx.fillRect(-10,-24,20,26); // Plate Carrier
-                ctx.fillStyle='#222'; ctx.fillRect(-11,-20,22,12); // Vest pouches
-                ctx.fillStyle='#333'; ctx.fillRect(-8,-18,6,8); ctx.fillRect(2,-18,6,8); // Mags
+                ctx.fillStyle='#1a1a1a'; ctx.fillRect(-10,-24,20,26); 
+                ctx.fillStyle='#222'; ctx.fillRect(-11,-20,22,12); 
+                ctx.fillStyle='#333'; ctx.fillRect(-8,-18,6,8); ctx.fillRect(2,-18,6,8); 
 
-                // --- HEAD ---
+                // HEAD
                 ctx.save(); ctx.translate(0,-26); ctx.rotate(0.1);
-                ctx.fillStyle='#2c3e50'; // Helmet Color
+                ctx.fillStyle='#2c3e50'; 
                 ctx.beginPath(); ctx.arc(0,0,11,Math.PI,0); ctx.lineTo(11,8); ctx.lineTo(-11,8); ctx.fill();
-                ctx.fillStyle='#111'; ctx.fillRect(-10,0,20,4); // Goggle Mount
-                ctx.fillStyle='#0f0'; ctx.shadowColor='#0f0'; ctx.shadowBlur=10; // NVG
+                ctx.fillStyle='#111'; ctx.fillRect(-10,0,20,4); 
+                ctx.fillStyle='#0f0'; ctx.shadowColor='#0f0'; ctx.shadowBlur=10; 
                 ctx.fillRect(4,-2,8,5); ctx.shadowBlur=0;
                 ctx.restore();
 
-                // --- ARMS & WEAPON ---
+                // ARMS
                 ctx.save(); ctx.translate(4,-18); ctx.rotate(bob*0.05);
-                // Back Arm
                 ctx.fillStyle='#2c3e50'; ctx.fillRect(-6,0,8,16); 
-                // Gun
-                ctx.fillStyle='#000'; ctx.fillRect(-6,6,12,6); // Stock
-                ctx.fillStyle='#222'; ctx.fillRect(6,4,20,8); // Receiver
-                ctx.fillStyle='#111'; ctx.fillRect(10,12,6,10); // Mag
-                ctx.fillStyle='#000'; ctx.fillRect(26,6,14,4); // Barrel
-                ctx.fillStyle='#444'; ctx.fillRect(12,0,8,4); // Holosight
-                // Front Arm
+                ctx.fillStyle='#000'; ctx.fillRect(-6,6,12,6); 
+                ctx.fillStyle='#222'; ctx.fillRect(6,4,20,8); 
+                ctx.fillStyle='#111'; ctx.fillRect(10,12,6,10); 
+                ctx.fillStyle='#000'; ctx.fillRect(26,6,14,4); 
+                ctx.fillStyle='#444'; ctx.fillRect(12,0,8,4); 
                 ctx.rotate(-0.2);
-                ctx.fillStyle='#34495e'; ctx.fillRect(0,0,14,6); // Forearm
-                ctx.fillStyle='#111'; ctx.fillRect(14,0,6,6); // Glove
+                ctx.fillStyle='#34495e'; ctx.fillRect(0,0,14,6); 
+                ctx.fillStyle='#111'; ctx.fillRect(14,0,6,6); 
                 ctx.restore();
             }
             else if (t==='enemy') { 
                 let rc = (s==='run') ? Math.sin(f * 0.4) : 0;
-                // Legs
-                ctx.fillStyle='#5d4037'; // Tan Pants
+                ctx.fillStyle='#5d4037'; 
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*-0.6); ctx.fillRect(-6,0,12,30); ctx.fillStyle='#000'; ctx.fillRect(-7,30,14,6); ctx.restore();
                 ctx.fillStyle='#795548'; 
                 ctx.save(); ctx.translate(0,-30); ctx.rotate(rc*0.6); ctx.fillRect(-6,0,12,30); ctx.fillStyle='#000'; ctx.fillRect(-7,30,14,6); ctx.restore();
-                // Torso
                 ctx.translate(0,-32);
-                ctx.fillStyle='#3e2723'; ctx.fillRect(-10,-22,20,24); // Shirt
-                ctx.fillStyle='#111'; ctx.fillRect(-10,-20,20,12); // Rig
-                // Head
+                ctx.fillStyle='#3e2723'; ctx.fillRect(-10,-22,20,24); 
+                ctx.fillStyle='#111'; ctx.fillRect(-10,-20,20,12); 
                 ctx.save(); ctx.translate(0,-24);
-                ctx.fillStyle='#d7ccc8'; ctx.fillRect(-8,-10,16,14); // Skin
-                ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.moveTo(-10,-6); ctx.lineTo(10,-10); ctx.lineTo(12,0); ctx.lineTo(-10,0); ctx.fill(); // Beret
-                ctx.fillStyle='#000'; ctx.fillRect(0,-4,10,4); // Shades
+                ctx.fillStyle='#d7ccc8'; ctx.fillRect(-8,-10,16,14); 
+                ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.moveTo(-10,-6); ctx.lineTo(10,-10); ctx.lineTo(12,0); ctx.lineTo(-10,0); ctx.fill(); 
+                ctx.fillStyle='#000'; ctx.fillRect(0,-4,10,4); 
                 ctx.restore();
-                // Gun (AK)
                 ctx.save(); ctx.translate(4,-16); 
-                ctx.fillStyle='#5d4037'; ctx.fillRect(-8,6,10,4); // Stock
-                ctx.fillStyle='#000'; ctx.fillRect(2,4,24,6); // Body
-                ctx.fillStyle='#000'; ctx.beginPath(); ctx.moveTo(12,10); ctx.quadraticCurveTo(8,20,4,18); ctx.lineTo(8,10); ctx.fill(); // Mag
+                ctx.fillStyle='#5d4037'; ctx.fillRect(-8,6,10,4); 
+                ctx.fillStyle='#000'; ctx.fillRect(2,4,24,6); 
+                ctx.fillStyle='#000'; ctx.beginPath(); ctx.moveTo(12,10); ctx.quadraticCurveTo(8,20,4,18); ctx.lineTo(8,10); ctx.fill(); 
                 ctx.restore();
             }
             else if (t==='boss') {
