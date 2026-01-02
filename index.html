@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URBAN WARFARE: MISSION EDITION</title>
+    <title>URBAN WARFARE: FIXED</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Press+Start+2P&family=Rajdhani:wght@600&display=swap');
         
@@ -141,7 +141,6 @@
         h1 { font-family: 'Black Ops One'; color: #e74c3c; font-size: 40px; margin: 0; animation: pulse 3s infinite; text-shadow: 0 0 20px rgba(231,76,60,0.5); }
         .start-msg { margin-top: 20px; font-size: 12px; color: #fff; animation: blink 1s infinite; }
 
-        /* --- MISSION START OVERLAY --- */
         #mission-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.8) 100%);
@@ -345,10 +344,8 @@
             const title = document.getElementById('mission-title');
             const sub = document.getElementById('mission-sub');
             const bIndex = getBiomeIndex(lvl);
-            
             title.innerText = "MISSION " + lvl.toString().padStart(2, '0');
             sub.innerText = "SECTOR: " + BIOMES[bIndex].name;
-            
             screen.style.display = 'flex';
             setTimeout(() => { screen.style.display = 'none'; }, 2500);
         }
@@ -356,9 +353,7 @@
         function generateLevel(lvl) {
             initBackground(lvl);
             platforms=[]; enemies=[]; powerups=[]; bullets=[]; particles=[]; hazards=[]; boss=null; goal=null;
-            
             showMissionText(lvl);
-
             if(lvl % 3 === 0) {
                 platforms.push({x:0, y:380, w:1200, h:70}); platforms.push({x:200, y:280, w:100, h:20}); platforms.push({x:500, y:200, w:100, h:20}); platforms.push({x:800, y:280, w:100, h:20});
                 boss={x:600, y:200, hp:50+(lvl*15), maxHp:50+(lvl*15), active:true, startX:600, timer:0};
@@ -372,7 +367,8 @@
                     cy=h; platforms.push({x:cx+gap, y:h, w:w, h:70});
                     if(Math.random()>0.6) hazards.push({x:cx+gap+Math.random()*w, y:h, type:'mine', active:true});
                     let eCount = 1+Math.floor(Math.random()*2);
-                    for(let e=0; e<eCount; e++) enemies.push({x:cx+gap+50+Math.random()*(w-100), y:h-60, hp:3, shootT:0, reactT:40, active:true, vx:1, minX:cx+gap, maxX:cx+gap+w, facingRight:true});
+                    // FIXED SPAWN Y: Enemies now spawn ON the platform surface 'h'
+                    for(let e=0; e<eCount; e++) enemies.push({x:cx+gap+50+Math.random()*(w-100), y:h, hp:3, shootT:0, reactT:40, active:true, vx:1, minX:cx+gap, maxX:cx+gap+w, facingRight:true, hitFlash:0});
                     if(Math.random()>0.85) powerups.push({x:cx+gap+w/2, y:h-30, type:(Math.random()<0.3?'G':(Math.random()<0.6?'L':'S')), active:true});
                     cx+=gap+w;
                 }
@@ -384,13 +380,14 @@
             shake=20; playNoise(0.5,100,0.6); 
             for(let i=0;i<30;i++)particles.push({x:x,y:y,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,life:30,type:'fire',size:Math.random()*20, color:'#f39c12'}); 
             lights.push({x:x, y:y, size:r*3, intensity:0.8, color:'rgba(255,100,50,0.5)', life:10});
-            enemies.forEach(e=>{if(e.active&&Math.hypot(e.x-x,e.y-y)<r){e.hp-=5;if(e.hp<=0)killEnemy(e);}}); if(boss&&boss.active&&Math.hypot(boss.x-x,boss.y-y)<r)boss.hp-=5; if(Math.hypot(player.x-x,player.y-y)<r)takeDamage(1); 
+            enemies.forEach(e=>{if(e.active&&Math.hypot(e.x-x,e.y-y)<r){e.hp-=5; e.hitFlash=5; if(e.hp<=0)killEnemy(e);}}); 
+            if(boss&&boss.active&&Math.hypot(boss.x-x,boss.y-y)<r)boss.hp-=5; if(Math.hypot(player.x-x,player.y-y)<r)takeDamage(1); 
         }
         function spawnBlood(x,y,c) { for(let i=0;i<c;i++)particles.push({x:x,y:y,vx:(Math.random()-.5)*12,vy:(Math.random()-.5)*12,life:60,type:'blood',size:3, color:'#b00'}); }
         function spawnLimb(x,y,t) { debris.push({x:x,y:y,vx:(Math.random()-.5)*10,vy:-5-Math.random()*5,w:(t==='torso'?15:8),h:8,type:'limb',part:t,angle:Math.random()*6,vAngle:(Math.random()-.5)*0.5,grounded:false}); }
         function spawnShell(x, y, faceR) { debris.push({x: x, y: y, vx: faceR ? -2 - Math.random() : 2 + Math.random(), vy: -3 - Math.random() * 2, w: 4, h: 2, type: 'shell', angle: Math.random() * 6, vAngle: (Math.random() - 0.5), grounded: false}); }
 
-        function killEnemy(e) { e.active=false; score+=100; playNoise(0.1,100,0.5); spawnBlood(e.x,e.y,40); spawnLimb(e.x,e.y,'head'); spawnLimb(e.x,e.y,'torso'); spawnLimb(e.x,e.y,'arm'); spawnLimb(e.x,e.y,'leg'); bloodPools.push({x:e.x,y:e.y+60,size:20+Math.random()*20}); }
+        function killEnemy(e) { e.active=false; score+=100; playNoise(0.1,100,0.5); spawnBlood(e.x,e.y-30,40); spawnLimb(e.x,e.y-30,'head'); spawnLimb(e.x,e.y-30,'torso'); spawnLimb(e.x,e.y-30,'arm'); spawnLimb(e.x,e.y-30,'leg'); bloodPools.push({x:e.x,y:e.y,size:20+Math.random()*20}); }
         function takeDamage(amt) { if(player.invul>0)return; player.hp-=amt; player.invul=100; shake=20; playNoise(0.1,100,0.5); spawnBlood(player.x,player.y,10); if(player.hp<=0) die(); }
         
         function die() { 
@@ -401,7 +398,6 @@
                 isGameRunning = false;
                 document.getElementById('final-score').innerText = "SCORE: " + score;
                 document.getElementById('game-over-screen').style.display = 'flex';
-                clearInterval(musicInterval);
             } else { 
                 player.x=cameraX+100; player.y=100; player.vy=0; player.invul=150; player.hp=3; 
             } 
@@ -428,12 +424,13 @@
             hazards.forEach(h=>{ if(h.active && Math.abs(player.x-h.x)<15 && Math.abs((player.y+player.h)-h.y)<10){ h.active=false; spawnExplosion(h.x,h.y,60); } });
             enemies.forEach(e=>{
                 if(!e.active) return;
+                if(e.hitFlash > 0) e.hitFlash--;
                 e.x+=e.vx; if(e.x<e.minX||e.x>e.maxX)e.vx*=-1; e.facingRight=e.vx>0;
                 if(Math.abs(player.x-e.x)<GW/2+50){
                     if(e.reactT>0)e.reactT--; else{ e.shootT--; if(e.shootT<=0){ 
                         playNoise(0.1,600,0.1); 
-                        bullets.push({x:e.x,y:e.y+25,vx:player.x>e.x?6:-6,vy:0,player:false,active:true,type:'normal'}); 
-                        lights.push({x:e.x, y:e.y+25, size:80, intensity:0.5, color:'rgba(255,255,0,0.3)', life:3});
+                        bullets.push({x:e.x,y:e.y-30,vx:player.x>e.x?6:-6,vy:0,player:false,active:true,type:'normal'}); 
+                        lights.push({x:e.x, y:e.y-30, size:80, intensity:0.5, color:'rgba(255,255,0,0.3)', life:3});
                         e.shootT=80+Math.random()*60; 
                     } }
                 }
@@ -456,9 +453,15 @@
                 if(Math.abs(b.x-cameraX)>GW)b.active=false;
                 if(b.player){
                     enemies.forEach(e=>{ 
-                        if(e.active && Math.abs(b.x - e.x) < 30 && Math.abs(b.y - (e.y - 30)) < 45){ 
+                        // REPAIRED HITBOX: Bullet must be within width (25px) and Height (Head to Toe)
+                        // e.y is FEET. e.y-60 is HEAD.
+                        if(e.active && Math.abs(b.x - e.x) < 30 && b.y < e.y && b.y > e.y - 60){ 
                             if(b.type==='rocket'||b.type==='grenade'){b.active=false;spawnExplosion(b.x,b.y,80);} 
-                            else{e.hp--;b.active=false;spawnBlood(e.x,e.y,5);if(e.hp<=0)killEnemy(e);} 
+                            else{
+                                e.hp--; e.hitFlash = 5; b.active=false; 
+                                spawnBlood(e.x, b.y, 5); 
+                                if(e.hp<=0) killEnemy(e);
+                            } 
                         } 
                     });
                     if(boss&&boss.active&&Math.abs(b.x-boss.x)<50&&Math.abs(b.y-boss.y)<50){ if(b.type==='rocket'||b.type==='grenade'){b.active=false;spawnExplosion(b.x,b.y,80);} else{boss.hp--;b.active=false;} }
@@ -480,7 +483,7 @@
         }
 
         function draw() {
-            if(!isGameRunning) return;
+            if(!isGameRunning && document.getElementById('game-over-screen').style.display !== 'flex') return;
             const bIndex = getBiomeIndex(level); const t = BIOMES[bIndex];
             let grd = ctx.createLinearGradient(0,0,0,GH); grd.addColorStop(0, t.skyTop); grd.addColorStop(1, t.skyBot); ctx.fillStyle = grd; ctx.fillRect(0,0,GW,GH);
             ctx.save(); if(shake>0) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake); ctx.translate(-Math.floor(cameraX), 0);
@@ -508,7 +511,12 @@
             if(goal) drawSprite(goal.x, goal.y+50, 'chopper', true, 'idle', frameCount);
             powerups.forEach(p => { if(p.active){ let dy=Math.sin(frameCount*0.1)*5; ctx.fillStyle=p.type==='L'?'#8e44ad':(p.type==='G'?'#2ecc71':'#e74c3c'); ctx.fillRect(p.x, p.y+dy, 24, 24); ctx.fillStyle='#fff'; ctx.fillText(p.type, p.x+8, p.y+dy+17); }});
             if(player) {
-                enemies.forEach(e => { if(e.active) drawSprite(e.x+15, e.y+60, 'enemy', e.vx>0, 'run', frameCount+e.x); });
+                enemies.forEach(e => { if(e.active) {
+                    // Hit Flash logic
+                    if(e.hitFlash > 0) ctx.filter = 'brightness(200%)';
+                    drawSprite(e.x+15, e.y, 'enemy', e.vx>0, 'run', frameCount+e.x); 
+                    ctx.filter = 'none';
+                }});
                 if(player.invul%4<2) drawSprite(player.x+player.w/2, player.y+player.h, 'player', player.faceR, player.state, frameCount);
             }
             if(boss && boss.active) drawSprite(boss.x, boss.y+40, 'boss', false, 'idle', frameCount);
@@ -531,6 +539,7 @@
             ctx.restore();
         }
 
+        // FIXED SPRITE DRAWER (REMOVED OFFSETS)
         function drawSprite(x,y,t,r,s,f) {
             ctx.save(); ctx.translate(Math.floor(x),Math.floor(y)); if(!r)ctx.scale(-1,1);
             if(t==='player'){ 
@@ -558,9 +567,6 @@
         }
 
         window.startGame = function() { initAudio(); document.getElementById('title-screen').style.display='none'; document.getElementById('ui-layer').style.display='flex'; isGameRunning=true; player=new Player(); generateLevel(1); startMusic(0); loop(); }
-        window.resetGame = function() { player.x=cameraX+100; player.y=100; player.vy=0; player.invul=150; player.hp=3; }
-        window.nextLevel = function() { level++; if(level>20){alert("VICTORY");fullRestart();return;} cameraX=0; player.x=100; player.y=100; player.hp=3; generateLevel(level); let b=getBiomeIndex(level); if(level%3===0)b='boss'; startMusic(b); }
-        function loop() { if(isGameRunning){frameCount++; update();} if(isGameRunning||document.getElementById('game-over-screen').style.display==='flex')draw(); requestAnimationFrame(loop); }
     }
 </script>
 </body>
